@@ -14,7 +14,7 @@ const SCHEMAS: Record<string, Schema> = {
       { k: 'name', l: 'Customer name or handle', t: 'text', req: true }, { k: 'stars', l: 'Star rating', t: 'stars', def: 5 },
       { k: 'title', l: 'Headline', t: 'text' }, { k: 'body', l: 'Review text', t: 'textarea', req: true },
       { k: 'photo', l: 'Customer photo (optional)', t: 'image' }, { k: 'avatar', l: 'Profile picture (optional)', t: 'image' },
-      { k: 'verified', l: 'Show "Verified buyer" (only if they bought from you)', t: 'check' }, { k: 'featured', l: 'Feature near the top of the page', t: 'check' },
+      { k: 'verified', l: 'Show "Verified buyer" (only if they bought from you)', t: 'check' }, { k: 'featured', l: 'Show first in "What customers say" (the 3 cards near the top)', t: 'check' },
     ],
   },
   videos: {

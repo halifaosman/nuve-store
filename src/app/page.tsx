@@ -47,7 +47,11 @@ export default async function Home() {
   const R = c.reviews;
   const avg = R.length ? R.reduce((t, r) => t + r.stars, 0) / R.length : 0;
   const maxSave = Math.max(...s.bundles.map((b) => (b.compare ? Math.round((1 - b.price / b.compare) * 100) : 0)));
-  const featured = R.filter((r) => r.featured).slice(0, 3);
+  // Up to 3 cards: reviews ticked "Featured" first, then the best-rated of the rest.
+  const featured = [
+    ...R.filter((r) => r.featured),
+    ...R.filter((r) => !r.featured).sort((a, b) => b.stars - a.stars || Number(!!b.title) - Number(!!a.title)),
+  ].slice(0, 3);
   const photoReviews = R.filter((r) => r.photo);
   const faces = R.filter((r) => r.avatar || r.photo).slice(0, 3);
   let strip = c.photos.length ? c.photos.map((p) => ({ src: p.image, alt: p.caption || '' })) : ['backbun', 'gym', 'step4', 'office', 'beforeafter', 'wedding', 'portrait'].map((n) => ({ src: IMG(n), alt: '' }));
@@ -92,7 +96,7 @@ export default async function Home() {
 
         {featured.length > 0 && (
           <section className="feat"><div className="wrap">
-            <div className="center"><span className="eyebrow">Verified reviews</span><h2 className="h2">{s.featTitle}</h2>
+            <div className="center"><span className="eyebrow">{featured.every((r) => r.verified) ? 'Verified reviews' : 'Customer reviews'}</span><h2 className="h2">{s.featTitle}</h2>
               <div className="big-rating"><span>Rated</span><b>{avg.toFixed(1)}</b><span>/ 5</span><Stars n={avg} /></div></div>
             <div className="cards3">
               {featured.map((r) => (
