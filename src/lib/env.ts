@@ -1,11 +1,12 @@
 // Reads server configuration. Missing values fail loudly with a message that says what to set.
 function need(name: string): string {
   const v = process.env[name];
-  if (!v) throw new Error(`Missing setting ${name}. Add it in Vercel -> Project -> Settings -> Environment Variables.`);
+  if (!v) throw new Error(`Missing setting ${name}. Add it to the .env file on the server (or Vercel -> Settings -> Environment Variables).`);
   return v;
 }
 
-const production = () => process.env.VERCEL_ENV === 'production';
+// On Vercel only the production deployment counts as live; on our own server (VPS), `next start` is live.
+const production = () => (process.env.VERCEL_ENV ? process.env.VERCEL_ENV === 'production' : process.env.NODE_ENV === 'production');
 
 // On the live site, test mode must be switched on or off on purpose, never by a missing setting.
 function sandboxFlag(name: string): boolean {
@@ -20,7 +21,7 @@ function sandboxFlag(name: string): boolean {
 export const env = {
   siteUrl: () => {
     const v = process.env.SITE_URL;
-    if (!v && production()) throw new Error('Missing setting SITE_URL. Add your live address in Vercel -> Settings -> Environment Variables.');
+    if (!v && production()) throw new Error('Missing setting SITE_URL. Add your live address to the .env file on the server (or in Vercel).');
     return (v || 'http://localhost:3000').replace(/\/$/, '');
   },
   adminPassword: () => need('ADMIN_PASSWORD'),

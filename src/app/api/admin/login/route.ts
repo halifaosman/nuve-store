@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
   const missing = [!expected && 'ADMIN_PASSWORD', !secret && 'SESSION_SECRET'].filter(Boolean);
   if (missing.length) {
     return NextResponse.json({
-      error: `${missing.join(' and ')} ${missing.length > 1 ? 'are' : 'is'} not set on this deployment. Add ${missing.length > 1 ? 'them' : 'it'} in Vercel → Settings → Environment Variables (tick Production), then Deployments → ⋯ → Redeploy.`,
+      error: `${missing.join(' and ')} ${missing.length > 1 ? 'are' : 'is'} not set on this deployment. Add ${missing.length > 1 ? 'them' : 'it'} to the .env file on the server and run deploy/update.sh (on Vercel: Settings → Environment Variables, then Redeploy).`,
     }, { status: 500 });
   }
 
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
   if (!(await passwordMatches(given, expected, secret))) {
     if (database) await db().from('login_attempts').insert({ ip }).then(() => {}, () => {});
     await new Promise((r) => setTimeout(r, 600));
-    return NextResponse.json({ error: 'That password is not right. It must match ADMIN_PASSWORD in Vercel exactly (capital letters count).' }, { status: 401 });
+    return NextResponse.json({ error: 'That password is not right. It must match ADMIN_PASSWORD in your .env settings exactly (capital letters count).' }, { status: 401 });
   }
 
   if (database) await db().from('login_attempts').delete().eq('ip', ip).then(() => {}, () => {});

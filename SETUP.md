@@ -22,7 +22,35 @@ Allow about an hour. You need: a GitHub account, and free accounts at vercel.com
 - **PayFast sandbox:** the test merchant details are already in `.env.example` (merchant ID `10000100`). Test payments use the sandbox wallet, so no card is charged.
 - **Bob Go sandbox:** sign up at **sandbox.bobgo.co.za** → **Settings → API keys** → create a key.
 
-## 4. Deploy on Vercel
+## 4 (option A). Deploy on your own DigitalOcean server, with Claude Code
+1. On digitalocean.com, go to **Create → Droplets**:
+   - **Region:** London or Frankfurt (DigitalOcean has no Africa region).
+   - **Image:** Ubuntu 24.04 LTS.
+   - **Size:** Basic, Regular, **4 GB RAM** (Claude Code needs 4 GB).
+   - **Authentication:** Password (simplest), or an SSH key if you have one.
+   - Click **Create Droplet** and wait for its IP address to appear.
+2. Open the droplet and click **Access → Launch Droplet Console**. A terminal opens, logged in as root.
+3. Paste this and press Enter:
+   ```
+   curl -fsSLO https://raw.githubusercontent.com/halifaosman/nuve-store/main/deploy/setup.sh && bash setup.sh
+   ```
+   If your domain already points at the droplet (an A record set to its IP), add the domain to the end: `bash setup.sh nuve.co.za`. Without one, the store gets a free `https://<ip>.sslip.io` address you can swap later.
+4. The script asks you to log in to GitHub (it shows a code to enter at github.com/login/device). Then it opens your settings file. Fill in `ADMIN_PASSWORD`, the three Supabase values and `BOBGO_API_KEY`, then save with **Ctrl+O, Enter, Ctrl+X**. Everything else is done for you.
+5. When it prints **Done**, open the address it shows.
+6. Install Claude Code on the server:
+   ```
+   su - nuve
+   curl -fsSL https://claude.ai/install.sh | bash
+   cd ~/nuve-store && claude
+   ```
+   Log in when asked: it gives you a link to open on your phone or computer. Claude Code reads `CLAUDE.md` in the project, so it already knows how to rebuild and restart the store.
+
+Later changes: run `~/nuve-store/deploy/update.sh` as the `nuve` user. To change a setting, edit `~/nuve-store/.env` with `nano`, then run the same command.
+Using your own domain later: point its A record at the droplet, replace the address in `/etc/caddy/Caddyfile` (as root), run `systemctl reload caddy`, change `SITE_URL` in `.env`, then run `update.sh`.
+
+Then skip step 5 below and carry on at step 6, using your server's address.
+
+## 4 (option B). Deploy on Vercel
 1. On vercel.com, click **Add New → Project** and import the `nuve-store` repository.
 2. Before pressing Deploy, open **Environment Variables** and add every line from `.env.example`:
 
