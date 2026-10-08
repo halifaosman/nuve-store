@@ -8,10 +8,17 @@ export default function Login() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true); setErr('');
-    const r = await fetch('/api/admin/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pw }) });
-    if (r.ok) { window.location.href = '/admin'; return; }
-    const j = await r.json().catch(() => ({}));
-    setErr(j.error || 'Could not log in.');
+    try {
+      const r = await fetch('/api/admin/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pw }) });
+      const j = await r.json().catch(() => ({}));
+      if (r.ok) {
+        window.location.href = '/admin';
+        return;
+      }
+      setErr(j.error || `Could not log in (server error ${r.status}). Check Vercel → Deployments → Logs.`);
+    } catch {
+      setErr('Could not reach the server. Check your connection.');
+    }
     setBusy(false);
   }
   return (
