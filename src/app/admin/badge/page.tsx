@@ -1,0 +1,121 @@
+'use client';
+import { useEffect, useState } from 'react';
+import type { SiteSettings } from '@/lib/settings';
+import { AdminShell, api } from '../ui';
+
+async function uploadPhoto(file: File): Promise<string> {
+  if (!/^image\/(jpeg|png|webp|gif)$/.test(file.type)) throw new Error('Use a JPG, PNG or WebP photo.');
+  if (file.size > 10 * 1024 * 1024) throw new Error('Photos must be under 10 MB.');
+  const fd = new FormData();
+  fd.append('file', file);
+  return (await api<{ path: string }>('/api/admin/upload', { method: 'POST', body: fd })).path;
+}
+const media = (p: string) => (/^https?:|^\//.test(p) ? p : `/media/${p}`);
+
+export default function TrustBadge() {
+  const [s, setS] = useState<SiteSettings | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState('');
+  const [err, setErr] = useState('');
+  useEffect(() => { api<{ settings: SiteSettings }>('/api/admin/settings').then((j) => setS(j.settings)).catch((e) => setErr(e.message)); }, []);
+  if (!s) return <AdminShell title="Trust badge">{err ? <p className="err">{err}</p> : <p className="muted">Loading…</p>}</AdminShell>;
+
+  const set = (k: keyof SiteSettings, v: unknown) => { setMsg(''); setS({ ...s, [k]: v } as SiteSettings); };
+
+  // Sends the whole settings object back, so nothing else in Store settings is lost.
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true); setErr(''); setMsg('');
+    try { await api('/api/admin/settings', { method: 'PUT', json: s }); setMsg('Posted. It is live on the store now.'); }
+    catch (e2) { setErr((e2 as Error).message); }
+    setBusy(false);
+  }
+
+  const card = { display: 'flex', flexDirection: 'column' as const, gap: 14 };
+  return (
+    <AdminShell title="Trust badge">
+      <form onSubmit={save} style={{ display: 'flex', flexDirection: 'column', gap: 18, maxWidth: 820 }} noValidate>
+        <p className="muted" style={{ margin: 0 }}>These show just under the <b>Buy now</b> button on the store.</p>
+        <div className="card" style={card}>
+          <b>Trust badge (under Add to cart)</b>
+          <p className="muted" style={{ margin: 0, fontSize: 14 }}>Leave the headline empty to hide the badge. Only claim numbers that are true.</p>
+          <div className="f"><label htmlFor="tt">Headline</label><input id="tt" placeholder="Trusted by 1,200+ customers" value={s.trustTitle} onChange={(e) => set('trustTitle', e.target.value)} /></div>
+          <div className="f"><label htmlFor="tx">Line under it</label><input id="tx" placeholder="who switched to a 5-second bun" value={s.trustText} onChange={(e) => set('trustText', e.target.value)} /></div>
+          <div className="f">
+            <label>Customer photos (up to 3, square works best)</label>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              {[0, 1, 2].map((i) => {
+                const p = (s.trustAvatars || [])[i];
+                return (
+                  <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                    <div style={{ width: 72, height: 72, borderRadius: '50%', overflow: 'hidden', background: 'var(--blush)', border: '1px solid var(--line)', display: 'grid', placeItems: 'center', color: 'var(--soft)', fontSize: 12 }}>
+                      {p ? <img src={media(p)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : `Photo ${i + 1}`}
+                    </div>
+                    <label className="ghost" style={{ display: "inline-flex", alignItems: "center", color: "var(--ink)" }}>
+                      {p ? 'Replace' : 'Upload'}
+                      <input type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={async (e) => {
+                        const f = e.target.files?.[0]; e.target.value = '';
+                        if (!f) return;
+                        setErr('');
+                        try {
+                          const path = await uploadPhoto(f);
+                          const list = [...(s.trustAvatars || [])];
+                          if (i < list.length) list[i] = path; else list.push(path);
+                          set('trustAvatars', list.slice(0, 3));
+                        } catch (e2) { setErr((e2 as Error).message); }
+                      }} />
+                    </label>
+                    {p && <button type="button" className="ghost" style={{ color: "var(--muted)" }} onClick={() => set('trustAvatars', (s.trustAvatars || []).filter((_, j) => j !== i))}>Remove</button>}
+                  </div>
+                );
+              })}
+            </div>
+            <span className="muted" style={{ fontSize: 13 }}>No photos? It uses photos from your reviews instead. Use real customers&apos; photos, with their permission.</span>
+          </div>
+          {(s.trustTitle || s.trustCount) && (
+            <div>
+              <span className="muted" style={{ fontSize: 13 }}>Preview</span>
+              <div className="trust" style={{ marginTop: 6, maxWidth: 520 }}>
+                {(s.trustAvatars || []).length > 0 && (
+                  <div className="avs">
+                    {s.trustAvatars.map((p, i) => <img key={i} src={media(p)} alt="" />)}
+                    <span className="avs-tick" aria-hidden="true"><svg viewBox="0 0 24 24" width="12" height="12"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" /></svg></span>
+                  </div>
+                )}
+                <div><b>{s.trustTitle || `Trusted by ${s.trustCount} customers`}</b><span>{s.trustText}</span></div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="card" style={card}>
+          <b>Delivery timeline (under Add to cart)</b>
+          <label style={{ display: 'flex', gap: 10, alignItems: 'center', fontWeight: 600 }}>
+            <input type="checkbox" checked={s.showTimeline} onChange={(e) => set('showTimeline', e.target.checked)} style={{ width: 20, height: 20 }} />
+            Show the Ordered → Order ready → Delivered dates
+          </label>
+          <p className="muted" style={{ margin: 0, fontSize: 14 }}>Counted in business days from the day the customer visits (weekends skipped, public holidays not). Keep the ranges honest, as customers will hold you to them.</p>
+          <div className="row2">
+            <div className="f"><label>Order ready: business days after ordering</label>
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <input aria-label="Order ready from" type="number" min={0} value={s.readyDaysMin} onChange={(e) => set('readyDaysMin', Number(e.target.value))} /> to
+                <input aria-label="Order ready to" type="number" min={0} value={s.readyDaysMax} onChange={(e) => set('readyDaysMax', Number(e.target.value))} />
+              </div></div>
+            <div className="f"><label>Delivered: business days after ordering</label>
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <input aria-label="Delivered from" type="number" min={0} value={s.deliverDaysMin} onChange={(e) => set('deliverDaysMin', Number(e.target.value))} /> to
+                <input aria-label="Delivered to" type="number" min={0} value={s.deliverDaysMax} onChange={(e) => set('deliverDaysMax', Number(e.target.value))} />
+              </div></div>
+          </div>
+        </div>
+
+        {err && <p className="err" role="alert">{err}</p>}
+        {msg && <p style={{ color: 'var(--ok)', fontWeight: 700, margin: 0 }}>{msg}</p>}
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+          <button className="btn" type="submit" disabled={busy}>{busy ? 'Posting…' : 'Post to store'}</button>
+          <a href="/" target="_blank" rel="noopener noreferrer" className="muted" style={{ fontSize: 14 }}>View store</a>
+        </div>
+      </form>
+    </AdminShell>
+  );
+}
