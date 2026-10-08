@@ -33,7 +33,9 @@ section{padding-block:80px}
 .ann{background:var(--ink);color:var(--paper);text-align:center;font-size:12.5px;font-weight:700;letter-spacing:.06em;padding:10px 16px}
 .top{border-bottom:1px solid var(--line);background:var(--paper)}
 .top .wrap{display:flex;align-items:center;justify-content:space-between;height:68px;gap:16px}
-.logo{font-family:var(--display);font-size:30px;color:var(--ink);text-decoration:none}
+.logo{display:inline-flex;align-items:center;text-decoration:none;line-height:0}
+.logo img{height:36px;width:auto;display:block}
+@media (max-width:600px){.logo img{height:30px}}
 .nav{display:flex;gap:28px;font-size:14px;font-weight:600}
 .nav a{color:var(--ink);text-decoration:none}
 

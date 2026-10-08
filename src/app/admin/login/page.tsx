@@ -24,7 +24,7 @@ export default function Login() {
   return (
     <main style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 20, background: 'var(--blush)' }}>
       <form onSubmit={submit} className="card" style={{ width: 'min(380px, 100%)', display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <div style={{ fontFamily: 'var(--display)', fontSize: 30 }}>Nuvé admin</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><img src="/brand/nuve-logo.svg" alt="Nuvé" style={{ height: 34, width: 'auto' }} /><span className="muted" style={{ fontSize: 13, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' }}>Admin</span></div>
         <div className="f"><label htmlFor="pw">Password</label><input id="pw" type="password" autoComplete="current-password" value={pw} onChange={(e) => setPw(e.target.value)} autoFocus /></div>
         {err && <p className="err" role="alert">{err}</p>}
         <button className="btn" type="submit" disabled={busy || !pw}>{busy ? 'Checking…' : 'Log in'}</button>

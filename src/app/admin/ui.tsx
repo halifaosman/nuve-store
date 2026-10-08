@@ -58,7 +58,7 @@ export function AdminShell({ title, children, actions }: { title: string; childr
     <div style={{ minHeight: '100vh', background: 'var(--paper)' }}>
       <header style={{ background: 'var(--ink)', color: 'var(--paper)' }}>
         <div style={{ maxWidth: 1240, margin: '0 auto', padding: '0 20px', display: 'flex', alignItems: 'center', gap: 20, minHeight: 60, flexWrap: 'wrap' }}>
-          <Link href="/admin" style={{ fontFamily: 'var(--display)', fontSize: 24, color: 'var(--white)', textDecoration: 'none' }}>Nuvé admin</Link>
+          <Link href="/admin" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, color: 'var(--sand)', textDecoration: 'none', fontSize: 13, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' }}><img src="/brand/nuve-logo-white.svg" alt="Nuvé" style={{ height: 26, width: 'auto', display: 'block' }} />Admin</Link>
           <nav style={{ display: 'flex', gap: 4, flexWrap: 'wrap', flex: 1 }}>
             {NAV.map((n) => {
               const on = n.href === '/admin' ? path === '/admin' || path.startsWith('/admin/orders') : path.startsWith(n.href);

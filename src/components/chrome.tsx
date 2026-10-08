@@ -6,7 +6,7 @@ export function Header({ announcement }: { announcement: string }) {
       <div className="ann">{announcement}</div>
       <header className="top">
         <div className="wrap">
-          <Link className="logo" href="/">Nuvé</Link>
+          <Link className="logo" href="/" aria-label="Nuvé home"><img src="/brand/nuve-logo.svg" alt="Nuvé" width={139} height={36} /></Link>
           <nav className="nav">
             <a href="/#how">How it works</a>
             <a href="/#reviews">Reviews</a>
@@ -26,7 +26,7 @@ export function Footer() {
     <footer>
       <div className="wrap">
         <div>
-          <div className="logo" style={{ color: 'var(--white)' }}>Nuvé</div>
+          <div className="logo"><img src="/brand/nuve-logo-white.svg" alt="Nuvé" width={139} height={36} /></div>
           <div style={{ marginTop: 8 }}>Effortless hair tools for women with no time to waste.</div>
         </div>
         <div>© {new Date().getFullYear()} Nuvé</div>
