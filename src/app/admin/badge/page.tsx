@@ -76,7 +76,7 @@ export default function TrustBadge() {
               <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700 }}>
                 <span style={{ color: 'var(--gold)', letterSpacing: 2 }}>★★★★★</span>
                 <span>{prevAvg.toFixed(1)} / 5</span>
-                <span style={{ color: 'var(--berry)', textDecoration: 'underline' }}>({prevCount} review{prevCount === 1 ? '' : 's'}{s.ratingMode === 'custom' && s.ratingNote ? ` ${s.ratingNote}` : ''})</span>
+                <span style={{ color: "var(--muted)", fontWeight: 600 }}>({prevCount} review{prevCount === 1 ? '' : 's'}{s.ratingMode === 'custom' && s.ratingNote ? ` ${s.ratingNote}` : ''})</span>
               </div>
             </div>
           )}

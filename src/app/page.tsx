@@ -78,7 +78,7 @@ export default async function Home() {
             <Gallery images={GALLERY} saveBadge={maxSave > 0 ? `SAVE UP TO ${maxSave}%` : ''} />
             <div className="buy">
               {showRating && (
-                <div className="rating-line"><Stars n={avg} /><span>{avg.toFixed(1)} / 5</span><a href="#reviews">({ratingCount.toLocaleString('en-ZA')} review{ratingCount === 1 ? '' : 's'}{custom && s.ratingNote ? ` ${s.ratingNote}` : ''})</a></div>
+                <div className="rating-line"><Stars n={avg} /><span>{avg.toFixed(1)} / 5</span><span className="rating-count">({ratingCount.toLocaleString('en-ZA')} review{ratingCount === 1 ? '' : 's'}{custom && s.ratingNote ? ` ${s.ratingNote}` : ''})</span></div>
               )}
               <h1 className="h1">{s.headline}</h1>
               <p className="lede">{s.subhead}</p>
