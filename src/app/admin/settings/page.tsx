@@ -47,7 +47,7 @@ export default function Settings() {
           <div><Dot ok={!st.payfastSandbox} />PayFast is in <b>{st.payfastSandbox ? 'test (sandbox)' : 'live'}</b> mode</div>
           <div><Dot ok={st.bobgoKey} />Bob Go API key {st.bobgoKey ? `connected (${st.bobgoSandbox ? 'sandbox' : 'live'})` : 'not set: orders will not reach Bob Go'}</div>
           <div><Dot ok={st.bobgoWebhookSecret} />Bob Go tracking updates {st.bobgoWebhookSecret ? 'verified with your webhook secret' : 'not set up yet'}</div>
-          <p className="muted" style={{ margin: 0, fontSize: 14 }}>In Bob Go, add a webhook for the topics <b>fulfillment/created</b>, <b>tracking/updated</b> and <b>order/updated</b> with the address <code>{st.siteUrl}/api/webhooks/bobgo</code>. Keys and secrets are changed in Vercel, not here.</p>
+          <p className="muted" style={{ margin: 0, fontSize: 14 }}>In Bob Go, add a webhook for the topics <b>fulfillment/created</b>, <b>tracking/updated</b> and <b>order/updated</b> with the address <code>{st.siteUrl}/api/webhooks/bobgo</code>. Keys and secrets live in the .env file on the server, not here.</p>
         </div>
       )}
       <form onSubmit={save} style={{ display: 'flex', flexDirection: 'column', gap: 18, maxWidth: 820 }} noValidate>

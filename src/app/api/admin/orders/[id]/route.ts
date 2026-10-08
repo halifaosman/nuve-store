@@ -1,31 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { exec, one, rows, now } from '@/lib/db';
 import { logEvent, markPaid, sendToBobGo } from '@/lib/orders';
 import { getSettings } from '@/lib/settings';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(_: NextRequest, { params }: { params: { id: string } }) {
-  const { data: order } = await db().from('orders').select('*').eq('id', params.id).maybeSingle();
+  const order = await one('SELECT * FROM orders WHERE id = ?', [params.id]);
   if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
-  const { data: events } = await db().from('order_events').select('kind, message, created_at').eq('order_id', params.id).order('created_at', { ascending: false });
-  let popUrl: string | null = null;
-  if (order.pop_path) {
-    const s = await db().storage.from('proofs').createSignedUrl(order.pop_path, 600);
-    popUrl = s.data?.signedUrl || null;
-  }
+  const events = await rows('SELECT kind, message, created_at FROM order_events WHERE order_id = ? ORDER BY created_at DESC, id DESC', [params.id]);
+  // Proofs are private files; this admin-only link streams them (see ./proof/route.ts).
+  const popUrl = order.pop_path ? `/api/admin/orders/${order.id}/proof` : null;
   const { access_token: _t, ...rest } = order;
-  return NextResponse.json({ order: rest, events: events || [], popUrl });
+  return NextResponse.json({ order: rest, events, popUrl });
 }
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const { action, note } = await req.json().catch(() => ({}));
   const id = params.id;
-  const { data: o } = await db().from('orders').select('status, paid_at, payment_method').eq('id', id).maybeSingle();
+  const o = await one<{ status: string; paid_at: string | null; payment_method: string }>('SELECT status, paid_at, payment_method FROM orders WHERE id = ?', [id]);
   if (!o) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
-  const now = new Date().toISOString();
   let message = '';
-  const changed = async (q: PromiseLike<{ data: unknown[] | null }>) => !!((await q).data?.length);
   try {
     switch (action) {
       case 'mark_paid': {
@@ -36,36 +31,39 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       }
       case 'cancel':
         if (o.paid_at) return NextResponse.json({ error: 'This order is paid. Refund the customer first, then cancel it in Bob Go too.' }, { status: 400 });
-        if (!(await changed(db().from('orders').update({ status: 'cancelled', updated_at: now }).eq('id', id).is('paid_at', null).select('id'))))
+        if (!(await exec("UPDATE orders SET status = 'cancelled', updated_at = ? WHERE id = ? AND paid_at IS NULL", [now(), id])))
           return NextResponse.json({ error: 'A payment just came in for this order, so it was not cancelled. Refresh to see it.' }, { status: 409 });
         await logEvent(id, 'cancelled', 'Cancelled by admin');
         break;
       case 'restore': {
         if (o.status !== 'cancelled' && o.status !== 'expired') return NextResponse.json({ error: 'Only cancelled or expired orders can be restored.' }, { status: 400 });
         if (o.paid_at) {
-          await db().from('orders').update({ status: 'paid', updated_at: now }).eq('id', id).in('status', ['cancelled', 'expired']);
+          await exec("UPDATE orders SET status = 'paid', updated_at = ? WHERE id = ? AND status IN ('cancelled','expired')", [now(), id]);
           await logEvent(id, 'restored', 'Restored by admin (already paid)');
           const r = await sendToBobGo(id);
           message = r.ok ? 'Restored and sent to Bob Go.' : `Restored, but: ${r.message}`;
         } else {
           const s = await getSettings();
           const eft = o.payment_method === 'eft';
-          await db().from('orders').update({
-            status: eft ? 'awaiting_eft' : 'pending_payment', updated_at: now, created_at: eft ? undefined : now,
-            expires_at: eft ? new Date(Date.now() + s.eftMinutes * 60e3).toISOString() : null,
-          }).eq('id', id).in('status', ['cancelled', 'expired']);
+          if (eft) {
+            await exec("UPDATE orders SET status = 'awaiting_eft', updated_at = ?, expires_at = ? WHERE id = ? AND status IN ('cancelled','expired') AND paid_at IS NULL",
+              [now(), new Date(Date.now() + s.eftMinutes * 60e3), id]);
+          } else {
+            await exec("UPDATE orders SET status = 'pending_payment', updated_at = ?, created_at = ?, expires_at = NULL WHERE id = ? AND status IN ('cancelled','expired') AND paid_at IS NULL",
+              [now(), now(), id]);
+          }
           await logEvent(id, 'restored', eft ? `Restored by admin with a new ${s.eftMinutes}-minute payment window` : 'Restored by admin');
           message = 'Order restored.';
         }
         break;
       }
       case 'mark_shipped':
-        if (!(await changed(db().from('orders').update({ status: 'shipped', updated_at: now }).eq('id', id).not('paid_at', 'is', null).select('id'))))
+        if (!(await exec("UPDATE orders SET status = 'shipped', updated_at = ? WHERE id = ? AND paid_at IS NOT NULL", [now(), id])))
           return NextResponse.json({ error: 'Only paid orders can be marked shipped.' }, { status: 400 });
         await logEvent(id, 'shipped', 'Marked shipped by admin');
         break;
       case 'mark_delivered':
-        if (!(await changed(db().from('orders').update({ status: 'delivered', updated_at: now }).eq('id', id).not('paid_at', 'is', null).select('id'))))
+        if (!(await exec("UPDATE orders SET status = 'delivered', updated_at = ? WHERE id = ? AND paid_at IS NOT NULL", [now(), id])))
           return NextResponse.json({ error: 'Only paid orders can be marked delivered.' }, { status: 400 });
         await logEvent(id, 'delivered', 'Marked delivered by admin');
         break;
@@ -77,7 +75,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       }
       case 'note': {
         const text = String(note || '').trim().slice(0, 2000);
-        await db().from('orders').update({ notes: text || null, updated_at: now }).eq('id', id);
+        await exec('UPDATE orders SET notes = ?, updated_at = ? WHERE id = ?', [text || null, now(), id]);
         break;
       }
       default:

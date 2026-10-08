@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { Header, Footer } from '@/components/chrome';
-import { db } from '@/lib/db';
+import { one } from '@/lib/db';
 import { getSettings } from '@/lib/settings';
 import { expireStale } from '@/lib/orders';
 import { rand } from '@/lib/money';
@@ -12,7 +12,7 @@ export const metadata = { title: 'Your order | Nuvé', robots: { index: false } 
 export default async function OrderPage({ params, searchParams }: { params: { id: string }; searchParams: { t?: string; from?: string } }) {
   if (!/^[0-9a-f-]{36}$/.test(params.id)) notFound();
   await expireStale();
-  const { data: o } = await db().from('orders').select('*').eq('id', params.id).maybeSingle();
+  const o = await one('SELECT * FROM orders WHERE id = ?', [params.id]);
   if (!o || o.access_token !== searchParams.t) notFound();
   const s = await getSettings();
   const items = o.items as { description: string; qty: number; pack_price?: number; unit_price: number }[];

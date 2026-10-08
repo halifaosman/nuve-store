@@ -15,7 +15,7 @@ export default function Login() {
         window.location.href = '/admin';
         return;
       }
-      setErr(j.error || `Could not log in (server error ${r.status}). Check Vercel → Deployments → Logs.`);
+      setErr(j.error || `Could not log in (server error ${r.status}). See the server log: sudo journalctl -u nuve-store -n 50`);
     } catch {
       setErr('Could not reach the server. Check your connection.');
     }

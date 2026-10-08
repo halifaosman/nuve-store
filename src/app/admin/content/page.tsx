@@ -1,6 +1,5 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
 import { AdminShell, api } from '../ui';
 
 type Field = { k: string; l: string; t: 'text' | 'textarea' | 'stars' | 'image' | 'video' | 'check' | 'select'; req?: boolean; opts?: string[]; def?: unknown };
@@ -44,13 +43,12 @@ const SCHEMAS: Record<string, Schema> = {
   },
 };
 
-const supa = () => createClient(process.env.NEXT_PUBLIC_SUPABASE_URL || '', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '');
-
+// Sends the file to our own server, which saves it under media/ and returns its address.
 async function uploadFile(file: File): Promise<{ path: string; url: string }> {
-  const { path, token } = await api<{ path: string; token: string }>('/api/admin/upload', { method: 'POST', json: { type: file.type, size: file.size } });
-  const { error } = await supa().storage.from('media').uploadToSignedUrl(path, token, file, { contentType: file.type });
-  if (error) throw new Error('Upload failed: ' + error.message);
-  return { path, url: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/media/${path}` };
+  if (file.size > 50 * 1024 * 1024) throw new Error('Files must be under 50 MB.');
+  const fd = new FormData();
+  fd.append('file', file);
+  return api<{ path: string; url: string }>('/api/admin/upload', { method: 'POST', body: fd });
 }
 
 const STAR = 'M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z';
@@ -156,7 +154,7 @@ export default function Content() {
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       {previews[f.k] && vals[f.k] ? (f.t === 'video' ? <video src={previews[f.k]} muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <img src={previews[f.k]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />) : 'None'}
                     </div>
-                    <input id={id} type="file" accept={f.t === 'video' ? 'video/mp4,video/webm,video/quicktime' : 'image/jpeg,image/png,image/webp,image/gif,image/svg+xml'} onChange={(e) => pickFile(f, e.target.files?.[0])} />
+                    <input id={id} type="file" accept={f.t === 'video' ? 'video/mp4,video/webm,video/quicktime' : 'image/jpeg,image/png,image/webp,image/gif'} onChange={(e) => pickFile(f, e.target.files?.[0])} />
                     {!!vals[f.k] && <button type="button" className="ghost" onClick={() => setVals({ ...vals, [f.k]: '' })}>Remove</button>}
                   </div>
                 )}

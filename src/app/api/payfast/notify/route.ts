@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { one } from '@/lib/db';
 import { env } from '@/lib/env';
 import { itnParamString, itnSignatureValid, fromPayfast, confirmWithPayfast } from '@/lib/payfast';
 import { logEvent, markPaid } from '@/lib/orders';
-
-export const maxDuration = 60;
 
 // PayFast Instant Transaction Notification. Every check must pass before an order is marked paid.
 // 200 = handled (or rejected for good). 500 = something temporary went wrong, so PayFast retries later.
@@ -30,8 +28,12 @@ export async function POST(req: NextRequest) {
     if (data.merchant_id !== env.payfastMerchantId()) return reject('merchant id mismatch');
     if (!orderId) return reject('missing order id');
 
-    const { data: o, error } = await db().from('orders').select('id, total').eq('id', orderId).maybeSingle();
-    if (error) return retryLater(`database: ${error.message}`);
+    let o: { id: string; total: number } | null;
+    try {
+      o = await one<{ id: string; total: number }>('SELECT id, total FROM orders WHERE id = ?', [orderId]);
+    } catch (e) {
+      return retryLater(`database: ${e instanceof Error ? e.message : e}`);
+    }
     if (!o) return reject('unknown order');
     if (Math.abs(Number(o.total) - Number(data.amount_gross)) > 0.01) return reject(`amount ${data.amount_gross} does not match order total ${o.total}`);
 

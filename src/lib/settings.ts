@@ -1,4 +1,4 @@
-import { db } from './db';
+import { one } from './db';
 
 export type Bundle = { qty: number; label: string; sub: string; price: number; compare: number; tag: string };
 export type Address = { company: string; street_address: string; local_area: string; city: string; zone: string; code: string };
@@ -73,7 +73,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
 };
 
 export async function getSettings(): Promise<SiteSettings> {
-  const { data } = await db().from('settings').select('value').eq('key', 'site').maybeSingle();
+  const data = await one<{ value: Partial<SiteSettings> }>("SELECT value FROM settings WHERE `key` = 'site'");
   const saved = (data?.value || {}) as Partial<SiteSettings>;
   const out: SiteSettings = { ...DEFAULT_SETTINGS };
   for (const k of Object.keys(saved) as (keyof SiteSettings)[]) {

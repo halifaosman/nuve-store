@@ -1,16 +1,21 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { one } from '@/lib/db';
 import { expireStale, retryBobGo } from '@/lib/orders';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  await expireStale();
-  await retryBobGo(3).catch(() => {});
-  const count = async (statuses: string[]) => (await db().from('orders').select('id', { count: 'exact', head: true }).in('status', statuses)).count || 0;
-  const [eft, review, toShip, bobErr] = await Promise.all([
-    count(['awaiting_eft']), count(['eft_review']), count(['paid', 'sending', 'sent_to_bobgo']),
-    db().from('orders').select('id', { count: 'exact', head: true }).not('bobgo_error', 'is', null).is('bobgo_order_id', null),
-  ]);
-  return NextResponse.json({ eft, review, toShip, bobgoErrors: bobErr.count || 0 });
+  try {
+    await expireStale();
+    await retryBobGo(3).catch(() => {});
+    const c = await one<{ eft: number; review: number; toShip: number; bobgoErrors: number }>(`
+      SELECT SUM(status = 'awaiting_eft') AS eft,
+             SUM(status = 'eft_review') AS review,
+             SUM(status IN ('paid','sending','sent_to_bobgo')) AS toShip,
+             SUM(bobgo_error IS NOT NULL AND bobgo_order_id IS NULL) AS bobgoErrors
+        FROM orders`);
+    return NextResponse.json({ eft: Number(c?.eft || 0), review: Number(c?.review || 0), toShip: Number(c?.toShip || 0), bobgoErrors: Number(c?.bobgoErrors || 0) });
+  } catch (e) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Database error' }, { status: 500 });
+  }
 }

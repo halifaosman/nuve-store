@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { exec, now } from '@/lib/db';
 import { DEFAULT_SETTINGS, getSettings, SiteSettings } from '@/lib/settings';
 import { env } from '@/lib/env';
 
@@ -37,7 +37,10 @@ export async function PUT(req: NextRequest) {
     }));
   }
   if (out.eftMinutes !== undefined) out.eftMinutes = Math.min(1440, Math.max(5, Number(out.eftMinutes)));
-  const { error } = await db().from('settings').upsert({ key: 'site', value: out, updated_at: new Date().toISOString() });
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  try {
+    await exec("INSERT INTO settings (`key`, value, updated_at) VALUES ('site', ?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value), updated_at = VALUES(updated_at)", [JSON.stringify(out), now()]);
+  } catch (e) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Database error' }, { status: 500 });
+  }
   return NextResponse.json({ ok: true });
 }

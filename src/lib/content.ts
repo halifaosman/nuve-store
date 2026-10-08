@@ -1,4 +1,4 @@
-import { db, mediaUrl } from './db';
+import { rows, mediaUrl } from './db';
 
 export type Review = { id: string; name: string; stars: number; title: string | null; body: string; photo: string; avatar: string; verified: boolean; featured: boolean; created_at: string };
 export type Video = { id: string; video: string; caption: string | null; avatar: string; poster: string };
@@ -7,8 +7,9 @@ export type Logo = { id: string; image: string; name: string };
 export type Section = { id: string; eyebrow: string | null; heading: string; body: string | null; image: string; side: string; cta: string | null };
 
 async function list<T>(table: string, media: string[]): Promise<T[]> {
-  const { data } = await db().from(table).select('*').order('sort').order('created_at');
-  return (data || []).map((r: Record<string, unknown>) => {
+  if (!CONTENT_TABLES[table]) return [];
+  const data = await rows(`SELECT * FROM \`${table}\` ORDER BY sort, created_at`);
+  return data.map((r: Record<string, unknown>) => {
     const out = { ...r };
     for (const m of media) out[m] = mediaUrl(r[m] as string);
     return out as T;

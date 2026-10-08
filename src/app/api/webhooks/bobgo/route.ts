@@ -1,17 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { exec, one, now as nowDate } from '@/lib/db';
 import { orderNumberFromChannel, webhookSignatureValid } from '@/lib/bobgo';
 import { logEvent } from '@/lib/orders';
 
 type Json = Record<string, unknown>;
 
 async function seen(key: string): Promise<boolean> {
-  const { data } = await db().from('processed_webhooks').select('key').eq('key', key).maybeSingle();
-  return !!data;
+  return !!(await one('SELECT `key` FROM processed_webhooks WHERE `key` = ?', [key]));
 }
 // Recorded only after the update succeeded, so a failed attempt is retried by Bob Go.
 async function remember(key: string) {
-  await db().from('processed_webhooks').upsert({ key });
+  await exec('INSERT IGNORE INTO processed_webhooks (`key`) VALUES (?)', [key]);
 }
 
 export async function POST(req: NextRequest) {
@@ -22,7 +21,7 @@ export async function POST(req: NextRequest) {
   const topic = req.headers.get('x-bobgroup-topic') || '';
   let body: Json;
   try { body = JSON.parse(raw); } catch { return NextResponse.json({ error: 'Bad JSON' }, { status: 400 }); }
-  const now = new Date().toISOString();
+  const now = nowDate();
 
   try {
     if (topic === 'fulfillment/created') {
@@ -30,14 +29,12 @@ export async function POST(req: NextRequest) {
       if (await seen(key)) return NextResponse.json({ ok: true });
       const num = orderNumberFromChannel(body.channel_order_number);
       if (num) {
-        const { data: o } = await db().from('orders').select('id, status').eq('order_number', num).not('bobgo_order_id', 'is', null).maybeSingle();
+        const o = await one<{ id: string; status: string }>('SELECT id, status FROM orders WHERE order_number = ? AND bobgo_order_id IS NOT NULL', [num]);
         if (o) {
-          const { error } = await db().from('orders').update({
-            tracking_reference: String(body.method_reference || '') || null,
-            tracking_status: String(body.method_status || '') || null,
-            status: o.status === 'delivered' ? o.status : 'shipped', updated_at: now,
-          }).eq('id', o.id);
-          if (error) throw new Error(error.message);
+          await exec('UPDATE orders SET tracking_reference = ?, tracking_status = ?, status = ?, updated_at = ? WHERE id = ?', [
+            String(body.method_reference || '') || null,
+            String(body.method_status || '') || null,
+            o.status === 'delivered' ? o.status : 'shipped', now, o.id]);
           await logEvent(o.id, 'shipped', `Fulfilled in Bob Go, tracking ${body.method_reference || 'pending'}`);
         }
       }
@@ -49,14 +46,12 @@ export async function POST(req: NextRequest) {
       const key = `trk:${ref}:${status}:${last?.time || ''}`;
       if (!ref || (await seen(key))) return NextResponse.json({ ok: true });
       const shipment = (body.shipment || {}) as Json;
-      const { data: o } = await db().from('orders').select('id, status').eq('tracking_reference', ref).maybeSingle();
+      const o = await one<{ id: string; status: string }>('SELECT id, status FROM orders WHERE tracking_reference = ? LIMIT 1', [ref]);
       if (o) {
-        const { error } = await db().from('orders').update({
-          tracking_status: status, tracking_url: (shipment.tracking_url as string) || null,
-          status: status === 'delivered' ? 'delivered' : ['sent_to_bobgo', 'paid'].includes(o.status) ? 'shipped' : o.status,
-          updated_at: now,
-        }).eq('id', o.id);
-        if (error) throw new Error(error.message);
+        await exec('UPDATE orders SET tracking_status = ?, tracking_url = ?, status = ?, updated_at = ? WHERE id = ?', [
+          status, (shipment.tracking_url as string) || null,
+          status === 'delivered' ? 'delivered' : ['sent_to_bobgo', 'paid'].includes(o.status) ? 'shipped' : o.status,
+          now, o.id]);
         await logEvent(o.id, 'tracking', `Courier update: ${body.status_friendly || status}`);
       }
       await remember(key);
@@ -64,7 +59,7 @@ export async function POST(req: NextRequest) {
       if (body.status === 'cancelled') {
         const key = `ord:${body.id}:cancelled`;
         if (!(await seen(key))) {
-          const { data: o } = await db().from('orders').select('id').eq('bobgo_order_id', Number(body.id)).maybeSingle();
+          const o = await one<{ id: string }>('SELECT id FROM orders WHERE bobgo_order_id = ?', [Number(body.id)]);
           if (o) await logEvent(o.id, 'bobgo', 'Order was cancelled in Bob Go');
           await remember(key);
         }

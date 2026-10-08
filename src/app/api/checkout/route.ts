@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { randomBytes } from 'crypto';
+import { insert, one } from '@/lib/db';
 import { getSettings, bankReady } from '@/lib/settings';
 import { ratesAtCheckout } from '@/lib/bobgo';
 import { readCheckout } from '@/lib/validate';
@@ -31,17 +32,25 @@ export async function POST(req: NextRequest) {
   const shipping = round2(Number(rate.total_price));
   const total = round2(bundle.price + shipping);
 
-  const { data: order, error } = await db().from('orders').insert({
-    status: method === 'eft' ? 'awaiting_eft' : 'pending_payment',
-    payment_method: method,
-    customer_first: data.first, customer_last: data.last, email: data.email, phone: data.phone,
-    address_company: data.company || null, address_street: data.street, address_suburb: data.suburb, address_city: data.city,
-    address_province: data.province, address_postal: data.postal,
-    items, subtotal: bundle.price, shipping_cost: shipping, shipping_method: rate.service_name, total,
-    expires_at: method === 'eft' ? new Date(Date.now() + s.eftMinutes * 60e3).toISOString() : null,
-  }).select('id, order_number, access_token').single();
-  if (error || !order) {
-    console.error('Order insert failed', error);
+  const id = crypto.randomUUID();
+  const accessToken = randomBytes(18).toString('hex');
+  let order: { id: string; order_number: number; access_token: string } | null = null;
+  try {
+    await insert('orders', {
+      id, access_token: accessToken,
+      status: method === 'eft' ? 'awaiting_eft' : 'pending_payment',
+      payment_method: method,
+      customer_first: data.first, customer_last: data.last, email: data.email, phone: data.phone,
+      address_company: data.company || null, address_street: data.street, address_suburb: data.suburb, address_city: data.city,
+      address_province: data.province, address_postal: data.postal,
+      items, subtotal: bundle.price, shipping_cost: shipping, shipping_method: rate.service_name, total,
+      expires_at: method === 'eft' ? new Date(Date.now() + s.eftMinutes * 60e3) : null,
+    });
+    order = await one<{ id: string; order_number: number; access_token: string }>('SELECT id, order_number, access_token FROM orders WHERE id = ?', [id]);
+  } catch (e) {
+    console.error('Order insert failed', e);
+  }
+  if (!order) {
     return NextResponse.json({ error: 'We could not create your order. Please try again.' }, { status: 500 });
   }
   await logEvent(order.id, 'created', `Order placed (${method === 'eft' ? 'bank transfer' : 'PayFast'}), total R${total.toFixed(2)}`);
