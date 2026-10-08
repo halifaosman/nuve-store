@@ -42,8 +42,8 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     'The Nuvé SnapBun is a bendable bun shaper wrapped in soft synthetic fibre. Roll your hair up, snap it shut, and you have a full, salon-sleek bun in about 5 seconds. No bobby pins, no tutorials, no bun that collapses by lunch.',
   bundles: [
     { qty: 1, label: '1 SnapBun', sub: 'Try it out', price: 195, compare: 299, tag: '' },
-    { qty: 2, label: '2 SnapBuns', sub: 'One for home, one for your bag', price: 249, compare: 598, tag: 'MOST POPULAR' },
-    { qty: 3, label: '3 SnapBuns', sub: 'Share with your sister or daughter', price: 319, compare: 897, tag: 'BEST VALUE' },
+    { qty: 2, label: '2 SnapBuns', sub: 'One for home, one for your bag', price: 350, compare: 598, tag: 'MOST POPULAR' },
+    { qty: 3, label: '3 SnapBuns', sub: 'Share with your sister or daughter', price: 475, compare: 897, tag: 'BEST VALUE' },
   ],
   trustCount: '',
   trustText: 'who switched to a 5-second bun',
