@@ -32,12 +32,12 @@ section{padding-block:80px}
 /* announcement + header */
 .ann{background:var(--ink);color:var(--paper);text-align:center;font-size:12.5px;font-weight:700;letter-spacing:.06em;padding:10px 16px}
 .top{border-bottom:1px solid var(--line);background:var(--paper)}
-.top .wrap{display:flex;align-items:center;justify-content:space-between;height:68px;gap:16px}
+/* logo centred, basket on the right; the empty first column balances the basket */
+.top .wrap{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;height:68px;gap:16px}
+.top .logo{justify-self:center}
 .logo{display:inline-flex;align-items:center;text-decoration:none;line-height:0}
 .logo img{height:36px;width:auto;display:block}
 @media (max-width:600px){.logo img{height:30px}}
-.nav{display:flex;gap:28px;font-size:14px;font-weight:600}
-.nav a{color:var(--ink);text-decoration:none}
 
 /* hero */
 .hero{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:52px;padding-block:36px 72px}
@@ -205,7 +205,6 @@ footer .wrap{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap}
   .split.flip .media{order:0}
   .cards3,.grid3,.grid4,.rlist{grid-template-columns:minmax(0,1fr)}
   .rw-top{grid-template-columns:minmax(0,1fr);gap:20px}
-  .nav{display:none}
   section{padding-block:60px}
   .vcard{flex-basis:62%}
   .pcard{flex-basis:84%}
