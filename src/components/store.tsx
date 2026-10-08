@@ -93,31 +93,34 @@ export function ScrollButtons({ target, label }: { target: string; label: string
   );
 }
 
-const SPEAK = 'M11 5L6 9H3v6h3l5 4V5zM16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12';
-const MUTE = 'M11 5L6 9H3v6h3l5 4V5zM17 9l5 6M22 9l-5 6';
 
+// Silent, looping, inline clips with no controls. Tapping one takes the shopper to the pack picker.
 export function VideoRow({ videos }: { videos: Video[] }) {
-  const [unmuted, setUnmuted] = useState<string | null>(null);
-  const refs = useRef<Record<string, HTMLVideoElement | null>>({});
-  const toggle = (id: string) => {
-    const next = unmuted === id ? null : id;
-    setUnmuted(next);
-    Object.entries(refs.current).forEach(([k, v]) => { if (v) v.muted = k !== next; });
-    const v = refs.current[id];
-    if (v && next === id) { v.currentTime = 0; v.play().catch(() => {}); }
+  const keepPlaying = (el: HTMLVideoElement | null) => {
+    if (!el) return;
+    el.muted = true;            // React doesn't always set the muted attribute; autoplay needs it
+    el.defaultMuted = true;
+    el.play().catch(() => {});  // ignored if the browser blocks it (e.g. iPhone low power mode)
   };
   return (
     <div className="scroller" id="vids">
       {videos.map((v) => (
         <div className="vcard" key={v.id}>
-          <div className="vbox">
-            <video ref={(el) => { refs.current[v.id] = el; }} src={v.video} poster={v.poster || undefined} muted loop playsInline autoPlay preload="metadata" />
-            <button className="snd" aria-label={unmuted === v.id ? 'Mute' : 'Turn sound on'} onClick={() => toggle(v.id)}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={unmuted === v.id ? SPEAK : MUTE} /></svg>
-            </button>
+          <a className="vbox" href="/#buy" aria-label={v.caption ? `${v.caption}: shop now` : 'Shop now'}>
+            <video
+              ref={keepPlaying}
+              src={v.video}
+              poster={v.poster || undefined}
+              muted loop playsInline autoPlay preload="metadata"
+              disablePictureInPicture
+              disableRemotePlayback
+              controlsList="nodownload nofullscreen noremoteplayback noplaybackrate"
+              tabIndex={-1}
+              aria-hidden="true"
+            />
             {/* eslint-disable-next-line @next/next/no-img-element */}
             {v.avatar && <img className="av" src={v.avatar} alt="" />}
-          </div>
+          </a>
           <div className="vmeta">
             {v.caption && <b>{v.caption}</b>}
             <a className="btn small" href="/#buy">Shop now</a>
