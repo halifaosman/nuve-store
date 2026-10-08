@@ -96,37 +96,58 @@ export function ScrollButtons({ target, label }: { target: string; label: string
 
 // Silent, looping, inline clips with no controls. Tapping one takes the shopper to the pack picker.
 export function VideoRow({ videos }: { videos: Video[] }) {
+  const row = useRef<HTMLDivElement>(null);
+  const [edge, setEdge] = useState({ left: false, right: false });
   const keepPlaying = (el: HTMLVideoElement | null) => {
     if (!el) return;
     el.muted = true;            // React doesn't always set the muted attribute; autoplay needs it
     el.defaultMuted = true;
     el.play().catch(() => {});  // ignored if the browser blocks it (e.g. iPhone low power mode)
   };
+  const check = () => {
+    const el = row.current;
+    if (!el) return;
+    setEdge({ left: el.scrollLeft > 4, right: el.scrollLeft + el.clientWidth < el.scrollWidth - 4 });
+  };
+  useEffect(() => {
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+  const by = (dir: number) => {
+    const el = row.current;
+    const card = el?.querySelector<HTMLElement>('.vcard');
+    if (el && card) el.scrollBy({ left: dir * (card.offsetWidth + 8) * Math.max(1, Math.floor(el.clientWidth / (card.offsetWidth + 8))), behavior: 'smooth' });
+  };
   return (
-    <div className="scroller" id="vids">
-      {videos.map((v) => (
-        <div className="vcard" key={v.id}>
-          <a className="vbox" href="/#buy" aria-label={v.caption ? `${v.caption}: shop now` : 'Shop now'}>
-            <video
-              ref={keepPlaying}
-              src={v.video}
-              poster={v.poster || undefined}
-              muted loop playsInline autoPlay preload="metadata"
-              disablePictureInPicture
-              disableRemotePlayback
-              controlsList="nodownload nofullscreen noremoteplayback noplaybackrate"
-              tabIndex={-1}
-              aria-hidden="true"
-            />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            {v.avatar && <img className="av" src={v.avatar} alt="" />}
-          </a>
-          <div className="vmeta">
-            {v.caption && <b>{v.caption}</b>}
-            <a className="btn small" href="/#buy">Shop now</a>
+    <div className="vrow">
+      <div className="scroller vscroller" id="vids" ref={row} onScroll={check}>
+        {videos.map((v) => (
+          <div className="vcard" key={v.id}>
+            <a className="vbox" href="/#buy" aria-label={v.caption ? `${v.caption}: shop now` : 'Shop now'}>
+              <video
+                ref={keepPlaying}
+                src={v.video}
+                poster={v.poster || undefined}
+                muted loop playsInline autoPlay preload="metadata"
+                disablePictureInPicture
+                disableRemotePlayback
+                controlsList="nodownload nofullscreen noremoteplayback noplaybackrate"
+                tabIndex={-1}
+                aria-hidden="true"
+              />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              {v.avatar && <img className="av" src={v.avatar} alt="" />}
+            </a>
+            <div className="vmeta">
+              {v.caption && <b>{v.caption}</b>}
+              <a className="vshop" href="/#buy">Shop now</a>
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
+      {edge.left && <button className="varrow l" aria-label="Previous videos" onClick={() => by(-1)}><Chevron dir="l" /></button>}
+      {edge.right && <button className="varrow r" aria-label="More videos" onClick={() => by(1)}><Chevron dir="r" /></button>}
     </div>
   );
 }

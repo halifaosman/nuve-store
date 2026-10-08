@@ -135,11 +135,8 @@ export default async function Home() {
         )}
 
         {c.videos.length > 0 && (
-          <section><div className="wrap">
-            <div className="scroller-head">
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}><h2 className="h2">{s.videoHeading}</h2><p className="lede">{s.videoSub}</p></div>
-              <ScrollButtons target="vids" label="videos" />
-            </div>
+          <section className="vsec"><div className="vwrap">
+            <div className="vsec-head"><h2>{s.videoHeading}</h2>{s.videoSub && <p>{s.videoSub}</p>}</div>
             <VideoRow videos={c.videos} />
           </div></section>
         )}
