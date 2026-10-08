@@ -3,6 +3,7 @@ import { Header, Footer, Stars, Verified } from '@/components/chrome';
 import { Gallery, BuyBox, ScrollButtons, VideoRow, ReviewWidget } from '@/components/store';
 import { DEFAULT_SETTINGS, getSettings, SiteSettings } from '@/lib/settings';
 import { getContent } from '@/lib/content';
+import { mediaUrl } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -54,6 +55,9 @@ export default async function Home() {
   ].slice(0, 3);
   const photoReviews = R.filter((r) => r.photo);
   const faces = R.filter((r) => r.avatar || r.photo).slice(0, 3);
+  // Trust badge under Add to cart: its own photos from Store settings, else review photos.
+  const trustTitle = s.trustTitle || (s.trustCount ? `Trusted by ${s.trustCount} customers` : '');
+  const trustFaces = (s.trustAvatars || []).length ? s.trustAvatars.map((p) => mediaUrl(p)) : faces.map((r) => r.avatar || r.photo);
   let strip = c.photos.length ? c.photos.map((p) => ({ src: p.image, alt: p.caption || '' })) : ['backbun', 'gym', 'step4', 'office', 'beforeafter', 'wedding', 'portrait'].map((n) => ({ src: IMG(n), alt: '' }));
   while (strip.length < 7) strip = strip.concat(strip);
   let logos = c.logos.slice();
@@ -78,10 +82,15 @@ export default async function Home() {
                 ))}
               </ul>
               <BuyBox bundles={s.bundles} />
-              {s.trustCount && (
+              {trustTitle && (
                 <div className="trust">
-                  {faces.length > 0 && <div className="avs">{faces.map((r) => <img key={r.id} src={r.avatar || r.photo} alt="" />)}</div>}
-                  <div><b>Trusted by {s.trustCount} customers</b><span>{s.trustText}</span></div>
+                  {trustFaces.length > 0 && (
+                    <div className="avs">
+                      {trustFaces.map((src, i) => <img key={i} src={src} alt="" />)}
+                      <span className="avs-tick" aria-hidden="true"><svg viewBox="0 0 24 24" width="12" height="12"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" /></svg></span>
+                    </div>
+                  )}
+                  <div><b>{trustTitle}</b><span>{s.trustText}</span></div>
                 </div>
               )}
               <div className="pays">{['VISA', 'MASTERCARD', 'INSTANT EFT', 'SNAPSCAN', 'BANK TRANSFER'].map((p) => <span key={p}>{p}</span>)}</div>

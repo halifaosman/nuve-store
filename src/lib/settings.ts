@@ -9,7 +9,9 @@ export type SiteSettings = {
   subhead: string;
   bundles: Bundle[];
   trustCount: string;
+  trustTitle: string;
   trustText: string;
+  trustAvatars: string[];
   featTitle: string;
   videoHeading: string;
   videoSub: string;
@@ -46,7 +48,9 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     { qty: 3, label: '3 SnapBuns', sub: 'Share with your sister or daughter', price: 475, compare: 897, tag: 'BEST VALUE' },
   ],
   trustCount: '',
+  trustTitle: '',
   trustText: 'who switched to a 5-second bun',
+  trustAvatars: [],
   featTitle: 'What customers say',
   videoHeading: 'See It In Action',
   videoSub: 'From ponytail to polished bun in about 5 seconds. No pins, no tutorials.',

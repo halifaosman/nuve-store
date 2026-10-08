@@ -36,6 +36,12 @@ export async function PUT(req: NextRequest) {
       price: Math.max(5, Number(b.price) || 0), compare: Math.max(0, Number(b.compare) || 0), tag: String(b.tag || '').slice(0, 30),
     }));
   }
+  if (out.trustAvatars !== undefined) {
+    out.trustAvatars = (Array.isArray(out.trustAvatars) ? out.trustAvatars : [])
+      .map((v) => String(v || '').trim())
+      .filter((v) => /^[0-9A-Za-z][0-9A-Za-z/_.-]*$/.test(v) && !v.includes('..'))
+      .slice(0, 3);
+  }
   if (out.eftMinutes !== undefined) out.eftMinutes = Math.min(1440, Math.max(5, Number(out.eftMinutes)));
   try {
     await exec("INSERT INTO settings (`key`, value, updated_at) VALUES ('site', ?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value), updated_at = VALUES(updated_at)", [JSON.stringify(out), now()]);
