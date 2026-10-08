@@ -170,6 +170,27 @@ export default function Settings() {
         </div>
 
         <div className="card" style={card}>
+          <b>Delivery timeline (under Add to cart)</b>
+          <label style={{ display: 'flex', gap: 10, alignItems: 'center', fontWeight: 600 }}>
+            <input type="checkbox" checked={s.showTimeline} onChange={(e) => set('showTimeline', e.target.checked)} style={{ width: 20, height: 20 }} />
+            Show the Ordered → Order ready → Delivered dates
+          </label>
+          <p className="muted" style={{ margin: 0, fontSize: 14 }}>Counted in business days from the day the customer visits (weekends skipped, public holidays not). Keep the ranges honest, as customers will hold you to them.</p>
+          <div className="row2">
+            <div className="f"><label>Order ready: business days after ordering</label>
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <input aria-label="Order ready from" type="number" min={0} value={s.readyDaysMin} onChange={(e) => set('readyDaysMin', Number(e.target.value))} /> to
+                <input aria-label="Order ready to" type="number" min={0} value={s.readyDaysMax} onChange={(e) => set('readyDaysMax', Number(e.target.value))} />
+              </div></div>
+            <div className="f"><label>Delivered: business days after ordering</label>
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <input aria-label="Delivered from" type="number" min={0} value={s.deliverDaysMin} onChange={(e) => set('deliverDaysMin', Number(e.target.value))} /> to
+                <input aria-label="Delivered to" type="number" min={0} value={s.deliverDaysMax} onChange={(e) => set('deliverDaysMax', Number(e.target.value))} />
+              </div></div>
+          </div>
+        </div>
+
+        <div className="card" style={card}>
           <b>Page text</b>
           {TEXT.map(([k, l, long]) => (
             <div className="f" key={k}>

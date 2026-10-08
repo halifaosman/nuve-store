@@ -28,6 +28,7 @@ export async function PUT(req: NextRequest) {
     const v = body[k];
     if (typeof def === 'number') out[k] = Number(v) || 0;
     else if (typeof def === 'string') out[k] = String(v ?? '').slice(0, 2000);
+    else if (typeof def === 'boolean') out[k] = !!v;
     else out[k] = v;
   }
   if (Array.isArray(out.bundles)) {
@@ -41,6 +42,9 @@ export async function PUT(req: NextRequest) {
       .map((v) => String(v || '').trim())
       .filter((v) => /^[0-9A-Za-z][0-9A-Za-z/_.-]*$/.test(v) && !v.includes('..'))
       .slice(0, 3);
+  }
+  for (const k of ['readyDaysMin', 'readyDaysMax', 'deliverDaysMin', 'deliverDaysMax'] as const) {
+    if (out[k] !== undefined) out[k] = Math.min(60, Math.max(0, Math.round(Number(out[k]) || 0)));
   }
   if (out.eftMinutes !== undefined) out.eftMinutes = Math.min(1440, Math.max(5, Number(out.eftMinutes)));
   try {

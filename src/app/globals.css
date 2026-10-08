@@ -245,3 +245,12 @@ footer .wrap{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap}
 .st-eft_review{background:#F6E6FA;color:#6A2A80}
 .st-expired,.st-cancelled{background:#EEE9E6;color:#5F5049}
 @media (max-width:900px){.co,.row2,.row3{grid-template-columns:minmax(0,1fr)}.countdown{font-size:36px}}
+
+/* delivery timeline */
+.tl{list-style:none;margin:4px 0 0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);position:relative}
+.tl::before{content:"";position:absolute;top:24px;left:16.67%;right:16.67%;height:3px;background:var(--berry);border-radius:2px}
+.tl li{display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px;position:relative}
+.tl-dot{width:48px;height:48px;border-radius:50%;background:var(--berry);color:var(--white);display:flex;align-items:center;justify-content:center;margin-bottom:8px;box-shadow:0 0 0 4px var(--paper)}
+.tl b{font-size:15px}
+.tl li>span:last-child{font-size:14px;color:var(--muted)}
+@media (max-width:420px){.tl b{font-size:13.5px}.tl li>span:last-child{font-size:13px}.tl-dot{width:42px;height:42px}.tl::before{top:21px}}

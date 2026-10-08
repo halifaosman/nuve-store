@@ -54,3 +54,24 @@ export function Verified() {
     </span>
   );
 }
+
+const TL_ICONS = {
+  cart: <><path d="M3 4h2l2.2 10.2a1 1 0 0 0 1 .8h8.6a1 1 0 0 0 1-.8L19.5 8H6.2" /><circle cx="9" cy="19" r="1.4" /><circle cx="17" cy="19" r="1.4" /><path d="M12.5 3.5v5M10 6h5" /></>,
+  truck: <><path d="M2.5 6.5h11v9h-11z" /><path d="M13.5 9.5h4l3 3v3h-7" /><circle cx="6.5" cy="17.5" r="1.7" /><circle cx="17" cy="17.5" r="1.7" /></>,
+  gift: <><rect x="3.5" y="8.5" width="17" height="11" rx="1.5" /><path d="M3.5 12.5h17M12 8.5v11" /><path d="M12 8.5c-1.5-3.5-5-3.5-5-1.2 0 1.2 1.8 1.2 5 1.2zM12 8.5c1.5-3.5 5-3.5 5-1.2 0 1.2-1.8 1.2-5 1.2z" /></>,
+};
+
+/** Ordered → Order ready → Delivered, with estimated dates. */
+export function DeliveryTimeline({ steps }: { steps: { icon: keyof typeof TL_ICONS; date: string; label: string }[] }) {
+  return (
+    <ol className="tl" aria-label="Estimated delivery">
+      {steps.map((s) => (
+        <li key={s.label}>
+          <span className="tl-dot"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{TL_ICONS[s.icon]}</svg></span>
+          <b>{s.date}</b>
+          <span>{s.label}</span>
+        </li>
+      ))}
+    </ol>
+  );
+}

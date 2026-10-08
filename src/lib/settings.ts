@@ -35,6 +35,11 @@ export type SiteSettings = {
   fallbackShippingName: string;
   fallbackShippingPrice: number;
   handlingDays: number;
+  showTimeline: boolean;
+  readyDaysMin: number;
+  readyDaysMax: number;
+  deliverDaysMin: number;
+  deliverDaysMax: number;
 };
 
 export const DEFAULT_SETTINGS: SiteSettings = {
@@ -74,6 +79,11 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   fallbackShippingName: 'Standard delivery',
   fallbackShippingPrice: 99,
   handlingDays: 1,
+  showTimeline: true,
+  readyDaysMin: 1,
+  readyDaysMax: 2,
+  deliverDaysMin: 4,
+  deliverDaysMax: 8,
 };
 
 export async function getSettings(): Promise<SiteSettings> {

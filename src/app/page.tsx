@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
-import { Header, Footer, Stars, Verified } from '@/components/chrome';
+import { Header, Footer, Stars, Verified, DeliveryTimeline } from '@/components/chrome';
+import { timeline } from '@/lib/delivery';
 import { Gallery, BuyBox, ScrollButtons, VideoRow, ReviewWidget } from '@/components/store';
 import { DEFAULT_SETTINGS, getSettings, SiteSettings } from '@/lib/settings';
 import { getContent } from '@/lib/content';
@@ -93,6 +94,14 @@ export default async function Home() {
                   <div><b>{trustTitle}</b><span>{s.trustText}</span></div>
                 </div>
               )}
+              {s.showTimeline && (() => {
+                const t = timeline(s.readyDaysMin, s.readyDaysMax, s.deliverDaysMin, s.deliverDaysMax);
+                return <DeliveryTimeline steps={[
+                  { icon: 'cart', date: t.ordered, label: 'Ordered' },
+                  { icon: 'truck', date: t.ready, label: 'Order ready' },
+                  { icon: 'gift', date: t.delivered, label: 'Delivered' },
+                ]} />;
+              })()}
               <div className="pays">{['VISA', 'MASTERCARD', 'INSTANT EFT', 'SNAPSCAN', 'BANK TRANSFER'].map((p) => <span key={p}>{p}</span>)}</div>
               <div>
                 <details open><summary>What are the benefits?</summary><p>{'A full, sleek bun in about 5 seconds, with no pins, clips or elastics.\n• Holds through work, school runs and workouts\n• Adds volume so fine hair looks thicker\n• No tight elastics tugging at your edges\n• The fibre wrap blends into dark hair, so the tool stays hidden\n• Folds flat into any handbag or gym bag'}</p></details>
