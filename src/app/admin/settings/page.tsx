@@ -19,10 +19,11 @@ function Dot({ ok }: { ok: boolean }) {
 export default function Settings() {
   const [s, setS] = useState<SiteSettings | null>(null);
   const [st, setSt] = useState<Status | null>(null);
+  const [saved, setSaved] = useState<SiteSettings | null>(null); // what the store is using right now
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
   const [err, setErr] = useState('');
-  useEffect(() => { api<{ settings: SiteSettings; status: Status }>('/api/admin/settings').then((j) => { setS(j.settings); setSt(j.status); }).catch((e) => setErr(e.message)); }, []);
+  useEffect(() => { api<{ settings: SiteSettings; status: Status }>('/api/admin/settings').then((j) => { setS(j.settings); setSaved(j.settings); setSt(j.status); }).catch((e) => setErr(e.message)); }, []);
   if (!s) return <AdminShell title="Store settings">{err ? <p className="err">{err}</p> : <p className="muted">Loading…</p>}</AdminShell>;
 
   const set = (k: keyof SiteSettings, v: unknown) => setS({ ...s, [k]: v } as SiteSettings);
@@ -32,7 +33,7 @@ export default function Settings() {
   async function save(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true); setErr(''); setMsg('');
-    try { await api('/api/admin/settings', { method: 'PUT', json: s }); setMsg('Saved. The store shows the changes straight away.'); }
+    try { await api('/api/admin/settings', { method: 'PUT', json: s }); setSaved(s); setMsg('Saved. The store shows the changes straight away.'); }
     catch (e2) { setErr((e2 as Error).message); }
     setBusy(false);
   }
@@ -45,6 +46,12 @@ export default function Settings() {
           <b>Connections</b>
           <div><Dot ok={!st.payfastSandbox} />PayFast is in <b>{st.payfastSandbox ? 'test (sandbox)' : 'live'}</b> mode</div>
           <div><Dot ok={st.bobgoKey} />Bob Go API key {st.bobgoKey ? `connected (${st.bobgoSandbox ? 'sandbox' : 'live'})` : 'not set: orders will not reach Bob Go'}</div>
+          {(() => {
+            const b = saved || s;
+            const missing = [['bank', b.bankName], ['account name', b.bankAccountName], ['account number', b.bankAccountNumber], ['branch code', b.bankBranchCode]]
+              .filter(([, v]) => !String(v || '').trim()).map(([l]) => l);
+            return <div><Dot ok={!missing.length} />Bank transfer (manual EFT) {missing.length ? <>is <b>off at checkout</b>: fill in {missing.join(', ')} below, then Save settings</> : <>is <b>on</b> at checkout</>}</div>;
+          })()}
           <div><Dot ok={st.bobgoWebhookSecret} />Bob Go tracking updates {st.bobgoWebhookSecret ? 'verified with your webhook secret' : 'not set up yet'}</div>
           <p className="muted" style={{ margin: 0, fontSize: 14 }}>In Bob Go, add a webhook for the topics <b>fulfillment/created</b>, <b>tracking/updated</b> and <b>order/updated</b> with the address <code>{st.siteUrl}/api/webhooks/bobgo</code>. Keys and secrets live in the .env file on the server, not here.</p>
         </div>
