@@ -12,6 +12,10 @@ export type SiteSettings = {
   trustTitle: string;
   trustText: string;
   trustAvatars: string[];
+  ratingMode: string; // 'auto' (from your reviews) | 'custom' | 'hidden'
+  ratingValue: number;
+  ratingCount: number;
+  ratingNote: string;
   featTitle: string;
   videoHeading: string;
   videoSub: string;
@@ -56,6 +60,10 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   trustTitle: '',
   trustText: 'who switched to a 5-second bun',
   trustAvatars: [],
+  ratingMode: 'auto',
+  ratingValue: 0,
+  ratingCount: 0,
+  ratingNote: '',
   featTitle: 'What customers say',
   videoHeading: 'See It In Action',
   videoSub: 'From ponytail to polished bun in about 5 seconds. No pins, no tutorials.',

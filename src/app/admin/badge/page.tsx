@@ -17,9 +17,18 @@ export default function TrustBadge() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
   const [err, setErr] = useState('');
+  const [reviews, setReviews] = useState<{ n: number; avg: number } | null>(null);
   useEffect(() => { api<{ settings: SiteSettings }>('/api/admin/settings').then((j) => setS(j.settings)).catch((e) => setErr(e.message)); }, []);
+  useEffect(() => {
+    api<{ rows: { stars: number }[] }>('/api/admin/content/reviews')
+      .then((j) => setReviews({ n: j.rows.length, avg: j.rows.length ? j.rows.reduce((t, r) => t + Number(r.stars), 0) / j.rows.length : 0 }))
+      .catch(() => setReviews({ n: 0, avg: 0 }));
+  }, []);
   if (!s) return <AdminShell title="Trust badge">{err ? <p className="err">{err}</p> : <p className="muted">Loading…</p>}</AdminShell>;
 
+  const reviewSummary = reviews ? (reviews.n ? `${reviews.avg.toFixed(1)} / 5 from ${reviews.n} review${reviews.n === 1 ? '' : 's'}` : 'no reviews yet') : '…';
+  const prevAvg = s.ratingMode === 'custom' ? s.ratingValue || 0 : reviews?.avg || 0;
+  const prevCount = s.ratingMode === 'custom' ? s.ratingCount || 0 : reviews?.n || 0;
   const set = (k: keyof SiteSettings, v: unknown) => { setMsg(''); setS({ ...s, [k]: v } as SiteSettings); };
 
   // Sends the whole settings object back, so nothing else in Store settings is lost.
@@ -33,9 +42,46 @@ export default function TrustBadge() {
 
   const card = { display: 'flex', flexDirection: 'column' as const, gap: 14 };
   return (
-    <AdminShell title="Trust badge">
+    <AdminShell title="Trust badge & rating">
       <form onSubmit={save} style={{ display: 'flex', flexDirection: 'column', gap: 18, maxWidth: 820 }} noValidate>
-        <p className="muted" style={{ margin: 0 }}>These show just under the <b>Buy now</b> button on the store.</p>
+        <p className="muted" style={{ margin: 0 }}>Edit the star rating at the top of the product and the badges just under the <b>Buy now</b> button.</p>
+        <div className="card" style={card}>
+          <b>Star rating (above the headline)</b>
+          <p className="muted" style={{ margin: 0, fontSize: 14 }}>The &ldquo;★★★★★ 4.8 / 5 (13 reviews)&rdquo; line at the top of the product. Also used for &ldquo;Rated 4.8 / 5&rdquo; in What customers say.</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {[
+              ['auto', 'Work it out from my reviews', `Currently ${reviewSummary}`],
+              ['custom', 'Use my own numbers', 'For reviews you have collected elsewhere, e.g. Takealot, Google or Instagram'],
+              ['hidden', 'Hide the star rating', ''],
+            ].map(([v, l, h]) => (
+              <label key={v} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', cursor: 'pointer' }}>
+                <input type="radio" name="rm" checked={(s.ratingMode || 'auto') === v} onChange={() => set('ratingMode', v)} style={{ width: 20, height: 20, marginTop: 2 }} />
+                <span><b style={{ fontWeight: 600 }}>{l}</b>{h && <span className="muted" style={{ display: 'block', fontSize: 13 }}>{h}</span>}</span>
+              </label>
+            ))}
+          </div>
+          {s.ratingMode === 'custom' && (
+            <>
+              <div className="row3">
+                <div className="f"><label htmlFor="rv">Rating (out of 5)</label><input id="rv" type="number" step="0.1" min={1} max={5} value={s.ratingValue || ''} onChange={(e) => set('ratingValue', Number(e.target.value))} /></div>
+                <div className="f"><label htmlFor="rc">Number of reviews</label><input id="rc" type="number" min={1} value={s.ratingCount || ''} onChange={(e) => set('ratingCount', Number(e.target.value))} /></div>
+                <div className="f"><label htmlFor="rn">Where from (optional)</label><input id="rn" placeholder="e.g. on Takealot" value={s.ratingNote} onChange={(e) => set('ratingNote', e.target.value)} /></div>
+              </div>
+              <p className="muted" style={{ margin: 0, fontSize: 13 }}>Only use real numbers you can back up. A rating that doesn&apos;t match real reviews breaks advertising rules (Meta, Google) and the Consumer Protection Act.</p>
+            </>
+          )}
+          {s.ratingMode !== 'hidden' && (
+            <div>
+              <span className="muted" style={{ fontSize: 13 }}>Preview</span>
+              <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700 }}>
+                <span style={{ color: 'var(--gold)', letterSpacing: 2 }}>★★★★★</span>
+                <span>{prevAvg.toFixed(1)} / 5</span>
+                <span style={{ color: 'var(--berry)', textDecoration: 'underline' }}>({prevCount} review{prevCount === 1 ? '' : 's'}{s.ratingMode === 'custom' && s.ratingNote ? ` ${s.ratingNote}` : ''})</span>
+              </div>
+            </div>
+          )}
+        </div>
+
         <div className="card" style={card}>
           <b>Trust badge (under Add to cart)</b>
           <p className="muted" style={{ margin: 0, fontSize: 14 }}>Leave the headline empty to hide the badge. Only claim numbers that are true.</p>

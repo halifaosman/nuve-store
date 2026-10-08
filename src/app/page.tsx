@@ -47,7 +47,12 @@ async function load() {
 export default async function Home() {
   const { s, c } = await load();
   const R = c.reviews;
-  const avg = R.length ? R.reduce((t, r) => t + r.stars, 0) / R.length : 0;
+  const reviewAvg = R.length ? R.reduce((t, r) => t + r.stars, 0) / R.length : 0;
+  // Star rating line: from your reviews, your own numbers (Trust badge page), or hidden.
+  const custom = s.ratingMode === 'custom' && s.ratingValue > 0 && s.ratingCount > 0;
+  const avg = custom ? s.ratingValue : reviewAvg;
+  const ratingCount = custom ? s.ratingCount : R.length;
+  const showRating = s.ratingMode !== 'hidden' && ratingCount > 0;
   const maxSave = Math.max(...s.bundles.map((b) => (b.compare ? Math.round((1 - b.price / b.compare) * 100) : 0)));
   // Up to 3 cards: reviews ticked "Featured" first, then the best-rated of the rest.
   const featured = [
@@ -72,8 +77,8 @@ export default async function Home() {
           <div className="hero">
             <Gallery images={GALLERY} saveBadge={maxSave > 0 ? `SAVE UP TO ${maxSave}%` : ''} />
             <div className="buy">
-              {R.length > 0 && (
-                <div className="rating-line"><Stars n={avg} /><span>{avg.toFixed(1)} / 5</span><a href="#reviews">({R.length} review{R.length === 1 ? '' : 's'})</a></div>
+              {showRating && (
+                <div className="rating-line"><Stars n={avg} /><span>{avg.toFixed(1)} / 5</span><a href="#reviews">({ratingCount.toLocaleString('en-ZA')} review{ratingCount === 1 ? '' : 's'}{custom && s.ratingNote ? ` ${s.ratingNote}` : ''})</a></div>
               )}
               <h1 className="h1">{s.headline}</h1>
               <p className="lede">{s.subhead}</p>
@@ -115,7 +120,7 @@ export default async function Home() {
         {featured.length > 0 && (
           <section className="feat"><div className="wrap">
             <div className="center"><span className="eyebrow">{featured.every((r) => r.verified) ? 'Verified reviews' : 'Customer reviews'}</span><h2 className="h2">{s.featTitle}</h2>
-              <div className="big-rating"><span>Rated</span><b>{avg.toFixed(1)}</b><span>/ 5</span><Stars n={avg} /></div></div>
+              {showRating && <div className="big-rating"><span>Rated</span><b>{avg.toFixed(1)}</b><span>/ 5</span><Stars n={avg} /></div>}</div>
             <div className="cards3">
               {featured.map((r) => (
                 <div className="rcard" key={r.id}>

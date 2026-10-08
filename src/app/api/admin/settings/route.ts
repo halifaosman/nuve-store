@@ -46,6 +46,9 @@ export async function PUT(req: NextRequest) {
   for (const k of ['readyDaysMin', 'readyDaysMax', 'deliverDaysMin', 'deliverDaysMax'] as const) {
     if (out[k] !== undefined) out[k] = Math.min(60, Math.max(0, Math.round(Number(out[k]) || 0)));
   }
+  if (out.ratingMode !== undefined && !['auto', 'custom', 'hidden'].includes(String(out.ratingMode))) out.ratingMode = 'auto';
+  if (out.ratingValue !== undefined) out.ratingValue = Math.min(5, Math.max(0, Math.round(Number(out.ratingValue) * 10) / 10));
+  if (out.ratingCount !== undefined) out.ratingCount = Math.max(0, Math.round(Number(out.ratingCount) || 0));
   if (out.eftMinutes !== undefined) out.eftMinutes = Math.min(1440, Math.max(5, Number(out.eftMinutes)));
   try {
     await exec("INSERT INTO settings (`key`, value, updated_at) VALUES ('site', ?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value), updated_at = VALUES(updated_at)", [JSON.stringify(out), now()]);
