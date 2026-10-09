@@ -3,6 +3,8 @@ const nextConfig = {
   // deploy/update.sh builds into a separate folder, then swaps it in, so the live store keeps running during a build.
   distDir: process.env.NEXT_DIST_DIR || '.next',
   images: { unoptimized: true },
+  poweredByHeader: false,             // don't advertise the framework in response headers
+  productionBrowserSourceMaps: false, // never ship readable source code to browsers
   async headers() {
     return [{
       source: '/(.*)',

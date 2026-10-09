@@ -6,6 +6,7 @@ import { Gallery, BuyBox, ScrollButtons, VideoRow, ReviewWidget, TrackViewConten
 import { DEFAULT_SETTINGS, getSettings, SiteSettings } from '@/lib/settings';
 import { getContent } from '@/lib/content';
 import { mediaUrl } from '@/lib/db';
+import Protect from '@/components/protect';
 
 export const dynamic = 'force-dynamic';
 
@@ -75,6 +76,7 @@ export default async function Home() {
   return (
     <>
       <Header announcement={s.announcement} />
+      <Protect />
       <main>
         <div className="wrap" id="buy">
           <div className="hero">
