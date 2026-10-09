@@ -1,4 +1,5 @@
-import { Header, Footer } from '@/components/chrome';
+import { Header } from '@/components/chrome';
+import { Footer } from '@/components/footer';
 import CheckoutForm from './form';
 import { DEFAULT_SETTINGS, getSettings, bankReady } from '@/lib/settings';
 

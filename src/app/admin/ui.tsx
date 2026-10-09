@@ -41,16 +41,18 @@ const NAV = [
   { href: '/admin', label: 'Orders' },
   { href: '/admin/eft', label: 'Pending EFT', badge: 'eft' },
   { href: '/admin/customers', label: 'Customers' },
+  { href: '/admin/messages', label: 'Messages', badge: 'messages' },
   { href: '/admin/content', label: 'Page content' },
   { href: '/admin/badge', label: 'Badges & payments' },
+  { href: '/admin/policies', label: 'Policies & contact' },
   { href: '/admin/settings', label: 'Store settings' },
 ];
 
 export function AdminShell({ title, children, actions }: { title: string; children: React.ReactNode; actions?: React.ReactNode }) {
   const path = usePathname();
-  const [sum, setSum] = useState<{ eft: number; review: number; toShip: number; bobgoErrors: number } | null>(null);
+  const [sum, setSum] = useState<{ eft: number; review: number; toShip: number; bobgoErrors: number; messages?: number } | null>(null);
   useEffect(() => {
-    const load = () => api<{ eft: number; review: number; toShip: number; bobgoErrors: number }>('/api/admin/summary').then(setSum).catch(() => {});
+    const load = () => api<{ eft: number; review: number; toShip: number; bobgoErrors: number; messages?: number }>('/api/admin/summary').then(setSum).catch(() => {});
     load();
     const t = setInterval(load, 30000);
     return () => clearInterval(t);
@@ -63,7 +65,7 @@ export function AdminShell({ title, children, actions }: { title: string; childr
           <nav style={{ display: 'flex', gap: 4, flexWrap: 'wrap', flex: 1 }}>
             {NAV.map((n) => {
               const on = n.href === '/admin' ? path === '/admin' || path.startsWith('/admin/orders') : path.startsWith(n.href);
-              const count = n.badge && sum ? sum.eft + sum.review : 0;
+              const count = !sum ? 0 : n.badge === 'eft' ? sum.eft + sum.review : n.badge === 'messages' ? sum.messages || 0 : 0;
               return (
                 <Link key={n.href} href={n.href} style={{ color: on ? 'var(--ink)' : '#E8DDD6', background: on ? 'var(--paper)' : 'transparent', padding: '8px 12px', borderRadius: 8, fontWeight: 700, fontSize: 14, textDecoration: 'none', display: 'inline-flex', gap: 6, alignItems: 'center' }}>
                   {n.label}{count > 0 && <span style={{ background: 'var(--berry)', color: 'var(--white)', borderRadius: 999, fontSize: 11, padding: '1px 7px' }}>{count}</span>}

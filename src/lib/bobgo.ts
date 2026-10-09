@@ -120,3 +120,45 @@ export function webhookSignatureValid(rawBody: string, header: string | null): b
   const a = Buffer.from(expected), b = Buffer.from(header.trim());
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
+
+export type TrackingInfo = {
+  status: string;
+  courier: string;
+  estimateFrom: string;
+  estimateTo: string;
+  checkpoints: { time: string; status: string; message: string; location: string }[];
+};
+
+/** Live courier tracking from Bob Go (GET /tracking). Returns null if it can't be fetched. */
+export async function getTracking(reference: string): Promise<TrackingInfo | null> {
+  if (!bobgoConfigured() || !reference) return null;
+  try {
+    const res = await fetch(`${base()}/tracking?tracking_reference=${encodeURIComponent(reference)}`, {
+      headers: { Authorization: `Bearer ${env.bobgoKey()}`, Accept: 'application/json' },
+      cache: 'no-store',
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!res.ok) return null;
+    const list = await res.json();
+    const t = Array.isArray(list) ? list[0] : list;
+    if (!t) return null;
+    const cps = (Array.isArray(t.checkpoints) ? t.checkpoints : []) as Record<string, string>[];
+    return {
+      status: String(t.status_friendly || t.status || ''),
+      courier: String(t.courier_name || ''),
+      estimateFrom: String(t.shipment_estimated_delivery_date_from || ''),
+      estimateTo: String(t.shipment_estimated_delivery_date_to || ''),
+      checkpoints: cps
+        .map((c) => ({
+          time: String(c.time || ''),
+          status: String(c.status_friendly || c.status || ''),
+          message: String(c.message || ''),
+          location: [c.location, c.city].filter(Boolean).join(', '),
+        }))
+        .sort((a, b) => (Date.parse(b.time) || 0) - (Date.parse(a.time) || 0))
+        .slice(0, 15),
+    };
+  } catch {
+    return null;
+  }
+}

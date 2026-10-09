@@ -27,7 +27,7 @@ export async function PUT(req: NextRequest) {
     const def = DEFAULT_SETTINGS[k];
     const v = body[k];
     if (typeof def === 'number') out[k] = Number(v) || 0;
-    else if (typeof def === 'string') out[k] = String(v ?? '').slice(0, 2000);
+    else if (typeof def === 'string') out[k] = String(v ?? '').slice(0, k.startsWith('policy') ? 40000 : 2000);
     else if (typeof def === 'boolean') out[k] = !!v;
     else out[k] = v;
   }

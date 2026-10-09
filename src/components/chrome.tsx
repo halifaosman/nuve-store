@@ -17,20 +17,6 @@ export function Header({ announcement }: { announcement: string }) {
   );
 }
 
-export function Footer() {
-  return (
-    <footer>
-      <div className="wrap">
-        <div>
-          <div className="logo"><img src="/brand/nuve-logo-white.svg" alt="Nuvé" width={139} height={36} /></div>
-          <div style={{ marginTop: 8 }}>Effortless hair tools for women with no time to waste.</div>
-        </div>
-        <div>© {new Date().getFullYear()} Nuvé</div>
-      </div>
-    </footer>
-  );
-}
-
 const STAR = 'M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z';
 export function Stars({ n }: { n: number }) {
   return (

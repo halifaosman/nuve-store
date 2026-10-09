@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
-import { Header, Footer } from '@/components/chrome';
+import { Header } from '@/components/chrome';
+import { Footer } from '@/components/footer';
 import { one } from '@/lib/db';
 import { getSettings } from '@/lib/settings';
 import { expireStale } from '@/lib/orders';

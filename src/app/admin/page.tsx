@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AdminShell } from './ui';
 import { OrdersTable, useOrders } from './orders-table';
 
@@ -11,6 +11,8 @@ export default function Orders() {
   const [group, setGroup] = useState('');
   const [q, setQ] = useState('');
   const [search, setSearch] = useState('');
+  // Opening /admin?q=NUV1001 (e.g. from a message) searches straight away.
+  useEffect(() => { const v = new URLSearchParams(location.search).get('q'); if (v) { setQ(v); setSearch(v); } }, []);
   const { orders, err } = useOrders(group, search);
   return (
     <AdminShell title="Orders">

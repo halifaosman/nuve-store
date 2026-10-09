@@ -24,6 +24,7 @@ Live SnapBun store (Next.js 14 App Router + MySQL 8 + PayFast + Bob Go) running 
 - `src/lib/`: payfast.ts (signatures, ITN checks), bobgo.ts, orders.ts (status changes, Bob Go sending), settings.ts (packs, prices, bank), auth.ts (admin cookie), env.ts.
 - `src/app/`: the store page (`page.tsx`), `checkout/`, `order/[id]/` (EFT countdown and proof upload), `admin/` (orders, Pending EFT, customers, content, settings), and `api/`.
 - Prices, copy and bank details live in the admin under Store settings (database), not in the code.
+- Footer pop-ups (`src/components/footer.tsx`, `footer-links.tsx`): Track My Order (`/api/track`, order number + email/phone, live Bob Go `GET /tracking`), Contact Us (`/api/contact` → `messages` table → admin Messages), and policies from `src/lib/policies.ts` (templates filled from settings; custom text in admin Policies & contact). Opening `/#track`, `/#contact`, `/#terms`, `/#privacy` or `/#shipping` opens the pop-up.
 
 ## Rules
 - Keep PayFast signature code unchanged unless `npm test` still passes against `tests/vectors.jsonl`.

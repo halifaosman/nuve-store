@@ -125,3 +125,27 @@ CREATE TABLE IF NOT EXISTS sections (
   sort INT NOT NULL DEFAULT 0,
   created_at DATETIME(3) NOT NULL DEFAULT (UTC_TIMESTAMP(3))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ---------- Contact form messages ----------
+CREATE TABLE IF NOT EXISTS messages (
+  id CHAR(36) NOT NULL PRIMARY KEY,
+  name VARCHAR(120) NOT NULL,
+  email VARCHAR(200) NOT NULL,
+  phone VARCHAR(30) NULL,
+  order_ref VARCHAR(30) NULL,
+  topic VARCHAR(60) NULL,
+  message TEXT NOT NULL,
+  status VARCHAR(10) NOT NULL DEFAULT 'new',   -- new | read | done
+  ip VARCHAR(64) NULL,
+  created_at DATETIME(3) NOT NULL DEFAULT (UTC_TIMESTAMP(3)),
+  KEY messages_status_idx (status, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Simple per-IP limits for public forms (contact, order tracking)
+CREATE TABLE IF NOT EXISTS rate_hits (
+  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  bucket VARCHAR(40) NOT NULL,
+  ip VARCHAR(64) NOT NULL,
+  created_at DATETIME(3) NOT NULL DEFAULT (UTC_TIMESTAMP(3)),
+  KEY rate_hits_idx (bucket, ip, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

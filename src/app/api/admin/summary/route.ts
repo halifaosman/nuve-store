@@ -14,7 +14,8 @@ export async function GET() {
              SUM(status IN ('paid','sending','sent_to_bobgo')) AS toShip,
              SUM(bobgo_error IS NOT NULL AND bobgo_order_id IS NULL) AS bobgoErrors
         FROM orders`);
-    return NextResponse.json({ eft: Number(c?.eft || 0), review: Number(c?.review || 0), toShip: Number(c?.toShip || 0), bobgoErrors: Number(c?.bobgoErrors || 0) });
+    const m = await one<{ n: number }>("SELECT COUNT(*) AS n FROM messages WHERE status = 'new'").catch(() => null);
+    return NextResponse.json({ eft: Number(c?.eft || 0), review: Number(c?.review || 0), toShip: Number(c?.toShip || 0), bobgoErrors: Number(c?.bobgoErrors || 0), messages: Number(m?.n || 0) });
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'Database error' }, { status: 500 });
   }

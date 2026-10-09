@@ -15,6 +15,18 @@ export type SiteSettings = {
   payLabels: string; // payment names shown as small text tags, comma separated; empty hides them
   payLogos: string[]; // uploaded payment logo images, shown in a row under the tags
   payLogoSize: number; // logo height in pixels on the store
+  // Business details (shown in policies and the footer; South African law requires them for online shops)
+  bizName: string;
+  bizLegalName: string;
+  bizRegNo: string;
+  bizVatNo: string;
+  bizAddress: string;
+  bizEmail: string;
+  bizPhone: string;
+  // Custom policy text. Empty = use the built-in template.
+  policyPrivacy: string;
+  policyTerms: string;
+  policyShipping: string;
   ratingMode: string; // 'auto' (from your reviews) | 'custom' | 'hidden'
   ratingValue: number;
   ratingCount: number;
@@ -66,6 +78,16 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   payLabels: 'VISA, MASTERCARD, INSTANT EFT, SNAPSCAN, BANK TRANSFER',
   payLogos: [],
   payLogoSize: 40,
+  bizName: 'Nuvé',
+  bizLegalName: '',
+  bizRegNo: '',
+  bizVatNo: '',
+  bizAddress: '',
+  bizEmail: '',
+  bizPhone: '',
+  policyPrivacy: '',
+  policyTerms: '',
+  policyShipping: '',
   ratingMode: 'auto',
   ratingValue: 0,
   ratingCount: 0,

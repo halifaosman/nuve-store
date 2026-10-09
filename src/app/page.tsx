@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
-import { Header, Footer, Stars, Verified, DeliveryTimeline } from '@/components/chrome';
+import { Header, Stars, Verified, DeliveryTimeline } from '@/components/chrome';
+import { Footer } from '@/components/footer';
 import { timeline } from '@/lib/delivery';
 import { Gallery, BuyBox, ScrollButtons, VideoRow, ReviewWidget } from '@/components/store';
 import { DEFAULT_SETTINGS, getSettings, SiteSettings } from '@/lib/settings';
