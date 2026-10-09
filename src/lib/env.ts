@@ -42,6 +42,9 @@ export const env = {
   metaPixelId: () => (process.env.META_PIXEL_ID || '').trim(),
   metaToken: () => (process.env.META_CAPI_TOKEN || '').trim(),
   metaTestCode: () => (process.env.META_TEST_EVENT_CODE || '').trim(),
+  // Order emails through Resend (src/lib/email.ts)
+  resendKey: () => (process.env.RESEND_API_KEY || '').trim(),
+  emailFrom: () => (process.env.EMAIL_FROM || '').trim() || 'Nuvé <hello@nuve.andriettasmith.org>',
   // Facebook Page comment auto-replies (src/lib/fbauto.ts)
   fbPageToken: () => (process.env.META_PAGE_TOKEN || '').trim(),
   fbPageId: () => (process.env.META_PAGE_ID || '').trim(),

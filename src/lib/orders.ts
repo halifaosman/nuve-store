@@ -2,6 +2,7 @@ import { exec, insert, one, rows, tx, now } from './db';
 import { createBobGoOrder, findBobGoOrderId, bobgoConfigured, channelOrderNumber, OrderRow } from './bobgo';
 import { getSettings } from './settings';
 import { sendPurchase } from './meta';
+import { orderEmails } from './email';
 
 export const STATUS_LABEL: Record<string, string> = {
   pending_payment: 'Waiting for PayFast',
@@ -66,6 +67,7 @@ export async function markPaid(orderId: string, how: string, extra: { pf_payment
   }
   await logEvent(orderId, 'paid', `Payment confirmed (${how})`);
   void sendPurchase(orderId).catch((e) => console.warn('Meta purchase failed', e)); // ad tracking; never blocks fulfilment
+  void orderEmails(orderId); // confirmation to the customer + new-order alert to the shop
   return sendToBobGo(orderId);
 }
 

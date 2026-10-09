@@ -3,6 +3,7 @@ import { insert, one, rows } from '@/lib/db';
 import { getTracking, TrackingInfo } from '@/lib/bobgo';
 import { journey } from '@/lib/journey';
 import { clientIp, overLimit } from '@/lib/ratelimit';
+import { messageEmail } from '@/lib/email';
 import { expireStale } from '@/lib/orders';
 
 export const dynamic = 'force-dynamic';
@@ -82,9 +83,11 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   if (await overLimit(`app:${o.id}`, clientIp(req), 10, 60)) {
     return NextResponse.json({ error: 'You have sent a few messages already. We will reply soon.' }, { status: 429 });
   }
+  const msgId = crypto.randomUUID();
   await insert('messages', {
-    id: crypto.randomUUID(), name: `${o.customer_first} ${o.customer_last}`.trim(), email: o.email.toLowerCase(), phone: o.phone,
+    id: msgId, name: `${o.customer_first} ${o.customer_last}`.trim(), email: o.email.toLowerCase(), phone: o.phone,
     order_ref: `NUV${o.order_number}`, topic: 'Order app', message: text, ip: clientIp(req),
   });
+  void messageEmail(msgId);
   return NextResponse.json({ ok: true });
 }

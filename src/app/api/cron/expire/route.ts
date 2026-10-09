@@ -3,6 +3,7 @@ import { env } from '@/lib/env';
 import { expireStale, retryBobGo, retryMetaPurchases } from '@/lib/orders';
 import { compressNextVideo } from '@/lib/video';
 import { runFbAuto } from '@/lib/fbauto';
+import { runEmailOutbox } from '@/lib/email';
 
 // deploy/cron.sh calls this every minute with "Authorization: Bearer <CRON_SECRET>".
 export async function GET(req: NextRequest) {
@@ -11,6 +12,7 @@ export async function GET(req: NextRequest) {
   await retryBobGo(20);
   await retryMetaPurchases(10);
   void compressNextVideo(); // runs in the background; one video at a time
+  void runEmailOutbox();    // order emails a hook missed, and retries
   void runFbAuto();         // Facebook comment auto-replies (does nothing until switched on)
   return NextResponse.json({ ok: true });
 }

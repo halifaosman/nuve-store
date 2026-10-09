@@ -202,3 +202,21 @@ CREATE TABLE IF NOT EXISTS fb_comments (
   KEY fb_comments_created_idx (created_at),
   KEY fb_comments_from_post_idx (from_id, post_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Emails sent by the store (src/lib/email.ts). One row per message, so nothing is ever sent twice.
+-- ref = order id, message id or reply id; kind = eft, confirmed, shipped, delivered, admin_new, admin_proof, contact, reply.
+CREATE TABLE IF NOT EXISTS email_log (
+  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  ref VARCHAR(80) NOT NULL,
+  kind VARCHAR(30) NOT NULL,
+  to_addr VARCHAR(255) NULL,
+  subject VARCHAR(255) NULL,
+  status VARCHAR(16) NOT NULL,            -- sending | sent | failed | skipped
+  attempts INT NOT NULL DEFAULT 0,
+  error VARCHAR(500) NULL,
+  provider_id VARCHAR(100) NULL,
+  created_at DATETIME(3) NOT NULL DEFAULT (UTC_TIMESTAMP(3)),
+  updated_at DATETIME(3) NOT NULL DEFAULT (UTC_TIMESTAMP(3)),
+  UNIQUE KEY email_log_ref_kind (ref, kind),
+  KEY email_log_status_idx (status, updated_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

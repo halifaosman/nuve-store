@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { exec, insert, one } from '@/lib/db';
+import { replyEmail } from '@/lib/email';
 
 // Reply shown to the customer in their order app (Help tab). Marks the message done.
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
@@ -11,5 +12,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   if (!m) return NextResponse.json({ error: 'Message not found' }, { status: 404 });
   await insert('message_replies', { message_id: params.id, body: text });
   await exec("UPDATE messages SET status = 'done' WHERE id = ?", [params.id]);
+  const r = await one<{ id: number }>('SELECT id FROM message_replies WHERE message_id = ? ORDER BY id DESC LIMIT 1', [params.id]);
+  if (r) void replyEmail(r.id); // also email the customer
   return NextResponse.json({ ok: true });
 }

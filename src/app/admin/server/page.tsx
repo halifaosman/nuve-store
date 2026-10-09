@@ -105,6 +105,56 @@ export default function ServerSettings() {
           <span className="muted" style={{ fontSize: 13 }}>The store is offline for a few seconds while it restarts. The previous file is kept as <code>.env.bak</code> on the server.</span>
         </div>
       </form>
+      <EmailTest />
     </AdminShell>
+  );
+}
+
+type EmailRow = { ref: string; kind: string; to_addr: string | null; subject: string | null; status: string; attempts: number; error: string | null; updated_at: string };
+const KIND: Record<string, string> = { eft: 'Bank details', confirmed: 'Order confirmed', shipped: 'Shipped', delivered: 'Delivered', admin_new: 'New-order alert', admin_proof: 'Proof alert', contact: 'Message copy', reply: 'Reply to customer' };
+
+/** Send a test email, and see what the store has emailed recently. */
+function EmailTest() {
+  const [d, setD] = useState<{ enabled: boolean; owner: string; recent: EmailRow[] } | null>(null);
+  const [to, setTo] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null);
+  const load = () => api<{ enabled: boolean; owner: string; recent: EmailRow[] }>('/api/admin/email-test').then((j) => { setD(j); setTo((t) => t || j.owner); }).catch(() => {});
+  useEffect(() => { load(); }, []);
+  if (!d) return null;
+  async function send() {
+    setBusy(true); setNote(null);
+    try { await api('/api/admin/email-test', { method: 'POST', json: { to } }); setNote({ ok: true, text: `Sent. Check ${to} (and the spam folder the first time).` }); }
+    catch (e) { setNote({ ok: false, text: (e as Error).message }); }
+    setBusy(false); load();
+  }
+  return (
+    <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 860, marginTop: 18 }}>
+      <b>Email</b>
+      {!d.enabled ? <p className="muted" style={{ margin: 0, fontSize: 14 }}>Emails are off until you add a Resend API key under <b>Email (Resend)</b> above.</p> : (
+        <>
+          <p className="muted" style={{ margin: 0, fontSize: 14 }}>Customers get emails for bank transfer details, order confirmation, shipping and delivery. New orders, proofs of payment and messages are sent to {d.owner ? <b>{d.owner}</b> : 'the customer service email in Policies & contact (not set yet)'}.</p>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <input type="email" value={to} onChange={(e) => setTo(e.target.value)} placeholder="you@example.com" aria-label="Send test to" style={{ flex: 1, minWidth: 220 }} />
+            <button className="btn small" type="button" onClick={send} disabled={busy || !to}>{busy ? 'Sending…' : 'Send a test email'}</button>
+          </div>
+          {note && <p style={{ margin: 0, fontWeight: 600, color: note.ok ? 'var(--ok)' : 'var(--berry)' }}>{note.text}</p>}
+        </>
+      )}
+      {d.recent.length > 0 && (
+        <details>
+          <summary style={{ cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>Recent emails ({d.recent.length})</summary>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
+            {d.recent.map((r) => (
+              <div key={r.ref + r.kind} style={{ fontSize: 13, borderTop: '1px solid var(--line)', paddingTop: 6 }}>
+                <b style={{ color: r.status === 'sent' ? 'var(--ok)' : r.status === 'failed' ? 'var(--berry)' : 'var(--muted)' }}>{r.status === 'sent' ? 'Sent' : r.status === 'failed' ? `Failed (try ${r.attempts})` : r.status}</b>
+                {' · '}{KIND[r.kind] || r.kind}{r.to_addr ? ` to ${r.to_addr}` : ''}{' · '}<span className="muted">{new Date(r.updated_at).toLocaleString('en-ZA', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Johannesburg' })}</span>
+                {r.error && <div className="muted">{r.error}</div>}
+              </div>
+            ))}
+          </div>
+        </details>
+      )}
+    </div>
   );
 }

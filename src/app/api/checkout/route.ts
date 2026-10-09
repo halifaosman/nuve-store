@@ -8,6 +8,7 @@ import { buildPaymentForm } from '@/lib/payfast';
 import { expireStale, logEvent } from '@/lib/orders';
 import { round2 } from '@/lib/money';
 import { browserFrom, declined } from '@/lib/meta';
+import { orderEmails } from '@/lib/email';
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
@@ -63,6 +64,7 @@ export async function POST(req: NextRequest) {
   await logEvent(order.id, 'created', `Order placed (${method === 'eft' ? 'bank transfer' : 'PayFast'}), total R${total.toFixed(2)}`);
 
   if (method === 'eft') {
+    void orderEmails(order.id); // bank details by email
     return NextResponse.json({ kind: 'eft', url: `/order/${order.id}?t=${order.access_token}` });
   }
   const form = buildPaymentForm({

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { insert } from '@/lib/db';
 import { clientIp, overLimit } from '@/lib/ratelimit';
+import { messageEmail } from '@/lib/email';
 
 export const dynamic = 'force-dynamic';
 const TOPICS = ['My order', 'Delivery', 'Returns and refunds', 'Product question', 'Something else'];
@@ -25,7 +26,9 @@ export async function POST(req: NextRequest) {
     if (await overLimit('contact', clientIp(req), 5, 60)) {
       return NextResponse.json({ error: 'You have sent a few messages already. Please try again a bit later.' }, { status: 429 });
     }
-    await insert('messages', { id: crypto.randomUUID(), name, email, phone: phone || null, order_ref: orderRef || null, topic, message, ip: clientIp(req) });
+    const id = crypto.randomUUID();
+    await insert('messages', { id, name, email, phone: phone || null, order_ref: orderRef || null, topic, message, ip: clientIp(req) });
+    void messageEmail(id); // copy to the shop's inbox
   } catch (e) {
     console.error('contact form failed', e);
     return NextResponse.json({ error: 'Your message could not be sent. Please try again.' }, { status: 500 });

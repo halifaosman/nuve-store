@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { exec, one, now } from '@/lib/db';
 import { saveFile } from '@/lib/files';
 import { expireStale, logEvent } from '@/lib/orders';
+import { orderEmails } from '@/lib/email';
 
 const TYPES: Record<string, string> = { 'application/pdf': 'pdf', 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/heic': 'heic' };
 
@@ -35,5 +36,6 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     [path, now(), now(), o.id]);
   if (!changed) return NextResponse.json({ error: 'This order changed while you were uploading. Refresh the page to see its status.' }, { status: 409 });
   await logEvent(o.id, 'pop', 'Customer uploaded proof of payment');
+  void orderEmails(o.id); // alert the shop to check the bank
   return NextResponse.json({ ok: true });
 }

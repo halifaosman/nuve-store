@@ -32,6 +32,8 @@ Live SnapBun store (Next.js 14 App Router + MySQL 8 + PayFast + Bob Go) running 
 
 - Facebook comment auto-replies: `src/lib/fbauto.ts`, run by the cron every minute. Polls the Page's `feed` and `ads_posts` via the Graph API (token `META_PAGE_TOKEN`, Page `META_PAGE_ID`, set in Server settings), matches keyword topics (settings key `fbauto`), replies / hides / flags, logs to `fb_comments`. Admin page: Facebook replies. Test mode logs without posting. Only comments newer than when it was switched on are handled.
 
+- Emails: `src/lib/email.ts` (+ `email-templates.ts`) send through Resend's HTTPS API (DigitalOcean blocks SMTP). Keys `RESEND_API_KEY`, `EMAIL_FROM` in Server settings. `orderEmails(id)` works out which emails an order is due (eft, confirmed, shipped, delivered, admin_new, admin_proof) and sends each once, deduped in `email_log` (ref, kind); hooks call it at each step and the cron (`runEmailOutbox`) catches misses and retries. Only events after `email_since` (settings) are emailed. Owner alerts go to bizEmail (Policies & contact). Contact/order-app messages are copied to the owner; admin replies are emailed to the customer. Test button and recent log: Server settings.
+
 - Meta tracking: browser Pixel (`src/components/meta-pixel.tsx`, `src/lib/track.ts`, loaded from the footer) plus Conversions API from the server (`src/lib/meta.ts`, `/api/meta/event`). Browser and server copies share an event_id. Purchase is sent by the server when an order is marked paid (`markPaid` → `sendPurchase`, retried by the cron), using browser details saved at checkout in `order_tracking`. Skipped in PayFast sandbox unless `META_TEST_EVENT_CODE` is set. Visitors who decline the cookie notice (`nuve_consent=no`) are not tracked.
 
 ## Rules

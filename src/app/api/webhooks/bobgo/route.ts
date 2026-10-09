@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { exec, one, now as nowDate } from '@/lib/db';
 import { orderNumberFromChannel, webhookSignatureValid } from '@/lib/bobgo';
 import { logEvent } from '@/lib/orders';
+import { orderEmails } from '@/lib/email';
 
 type Json = Record<string, unknown>;
 
@@ -36,6 +37,7 @@ export async function POST(req: NextRequest) {
             String(body.method_status || '') || null,
             o.status === 'delivered' ? o.status : 'shipped', now, o.id]);
           await logEvent(o.id, 'shipped', `Fulfilled in Bob Go, tracking ${body.method_reference || 'pending'}`);
+          void orderEmails(o.id);
         }
       }
       await remember(key);
@@ -53,6 +55,7 @@ export async function POST(req: NextRequest) {
           status === 'delivered' ? 'delivered' : ['sent_to_bobgo', 'paid'].includes(o.status) ? 'shipped' : o.status,
           now, o.id]);
         await logEvent(o.id, 'tracking', `Courier update: ${body.status_friendly || status}`);
+        void orderEmails(o.id);
       }
       await remember(key);
     } else if (topic === 'order/updated') {

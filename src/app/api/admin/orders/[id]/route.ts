@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { exec, one, rows, now } from '@/lib/db';
 import { logEvent, markPaid, sendToBobGo } from '@/lib/orders';
 import { getSettings } from '@/lib/settings';
+import { orderEmails } from '@/lib/email';
 
 export const dynamic = 'force-dynamic';
 
@@ -61,11 +62,13 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         if (!(await exec("UPDATE orders SET status = 'shipped', updated_at = ? WHERE id = ? AND paid_at IS NOT NULL", [now(), id])))
           return NextResponse.json({ error: 'Only paid orders can be marked shipped.' }, { status: 400 });
         await logEvent(id, 'shipped', 'Marked shipped by admin');
+        void orderEmails(id);
         break;
       case 'mark_delivered':
         if (!(await exec("UPDATE orders SET status = 'delivered', updated_at = ? WHERE id = ? AND paid_at IS NOT NULL", [now(), id])))
           return NextResponse.json({ error: 'Only paid orders can be marked delivered.' }, { status: 400 });
         await logEvent(id, 'delivered', 'Marked delivered by admin');
+        void orderEmails(id);
         break;
       case 'send_bobgo': {
         const r = await sendToBobGo(id);

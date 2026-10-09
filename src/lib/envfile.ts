@@ -15,6 +15,8 @@ export const EDITABLE: EnvField[] = [
   { group: 'Meta (Facebook) tracking', key: 'META_PIXEL_ID', label: 'Pixel ID', secret: false, kind: 'text', help: 'Events Manager → Data sources → your pixel. Numbers only.' },
   { group: 'Meta (Facebook) tracking', key: 'META_CAPI_TOKEN', label: 'Conversions API access token', secret: true, kind: 'text', help: 'Events Manager → your pixel → Settings → Conversions API → Generate access token.' },
   { group: 'Meta (Facebook) tracking', key: 'META_TEST_EVENT_CODE', label: 'Test event code (optional)', secret: false, kind: 'text', help: 'From Events Manager → Test events, e.g. TEST12345. Server events then show up there. Clear it when you are done testing.' },
+  { group: 'Email (Resend)', key: 'RESEND_API_KEY', label: 'Resend API key', secret: true, kind: 'text', help: 'resend.com → API Keys → Create API key (Sending access). Starts with re_.' },
+  { group: 'Email (Resend)', key: 'EMAIL_FROM', label: 'Send emails from', secret: false, kind: 'text', help: 'e.g. Nuvé <hello@nuve.andriettasmith.org>. The domain must be verified in Resend. Replies go to the customer service email in Policies & contact.' },
   { group: 'Facebook Page replies', key: 'META_PAGE_ID', label: 'Page ID', secret: false, kind: 'text', help: 'Numbers only. For your Page it is 61587599011799 (from facebook.com/profile.php?id=…).' },
   { group: 'Facebook Page replies', key: 'META_PAGE_TOKEN', label: 'Page access token', secret: true, kind: 'text', help: 'From your Meta app (system user token or Page token) with pages_read_engagement, pages_read_user_content, pages_manage_engagement and pages_show_list. See Facebook replies in the menu for the steps.' },
   { group: 'Store', key: 'SITE_URL', label: 'Store address', secret: false, kind: 'url', help: 'e.g. https://nuve.co.za (no slash at the end). PayFast and Bob Go send updates here.' },
@@ -48,6 +50,8 @@ export function checkValue(f: EnvField, v: string): string {
   if (f.kind === 'password' && v.length < 12) return `${f.label}: use at least 12 characters.`;
   if (f.key === 'PAYFAST_MERCHANT_ID' && v && !/^\d{5,12}$/.test(v)) return 'Merchant ID: numbers only, as shown in PayFast.';
   if (f.key === 'META_PIXEL_ID' && v && !/^\d{10,20}$/.test(v)) return 'Pixel ID: numbers only, as shown in Events Manager.';
+  if (f.key === 'RESEND_API_KEY' && v && !/^re_[A-Za-z0-9_]{10,}$/.test(v)) return 'Resend API key: it starts with re_ and has no spaces.';
+  if (f.key === 'EMAIL_FROM' && v && !/^([^<>@]{1,60}<)?[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+>?$/.test(v)) return 'Send emails from: use the form Nuvé <hello@your-domain>.';
   if (f.key === 'META_PAGE_ID' && v && !/^\d{5,25}$/.test(v)) return 'Page ID: numbers only.';
   if (f.key === 'META_TEST_EVENT_CODE' && v && !/^[A-Za-z0-9]{3,30}$/.test(v)) return 'Test event code: letters and numbers only, e.g. TEST12345.';
   return '';
