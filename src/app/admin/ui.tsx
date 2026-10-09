@@ -46,6 +46,7 @@ const NAV = [
   { href: '/admin/badge', label: 'Badges & payments' },
   { href: '/admin/policies', label: 'Policies & contact' },
   { href: '/admin/settings', label: 'Store settings' },
+  { href: '/admin/server', label: 'Server settings' },
 ];
 
 export function AdminShell({ title, children, actions }: { title: string; children: React.ReactNode; actions?: React.ReactNode }) {

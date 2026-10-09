@@ -84,7 +84,7 @@ export default function Settings() {
             return <div><Dot ok={!missing.length} />Bank transfer (manual EFT) {missing.length ? <>is <b>off at checkout</b>: fill in {missing.join(', ')} below, then Save settings</> : <>is <b>on</b> at checkout</>}</div>;
           })()}
           <div><Dot ok={st.bobgoWebhookSecret} />Bob Go tracking updates {st.bobgoWebhookSecret ? 'verified with your webhook secret' : 'not set up yet'}</div>
-          <p className="muted" style={{ margin: 0, fontSize: 14 }}>In Bob Go, add a webhook for the topics <b>fulfillment/created</b>, <b>tracking/updated</b> and <b>order/updated</b> with the address <code>{st.siteUrl}/api/webhooks/bobgo</code>. Keys and secrets live in the .env file on the server, not here.</p>
+          <p className="muted" style={{ margin: 0, fontSize: 14 }}>In Bob Go, add a webhook for the topics <b>fulfillment/created</b>, <b>tracking/updated</b> and <b>order/updated</b> with the address <code>{st.siteUrl}/api/webhooks/bobgo</code>. Keys and secrets are changed under <a href="/admin/server">Server settings</a>.</p>
         </div>
       )}
       <form onSubmit={save} style={{ display: 'flex', flexDirection: 'column', gap: 18, maxWidth: 820 }} noValidate>

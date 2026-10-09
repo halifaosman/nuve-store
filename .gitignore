@@ -7,3 +7,5 @@ node_modules
 next-env.d.ts
 .data
 .next-*
+.env.bak
+.env.tmp-*
