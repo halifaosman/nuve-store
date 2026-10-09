@@ -18,7 +18,7 @@ const SCHEMAS: Record<string, Schema> = {
     ],
   },
   videos: {
-    label: 'Videos', noun: 'video', hint: 'Vertical (9:16) MP4 or WebM videos, up to 50 MB. They play muted in a swipeable row until a visitor taps the speaker. Label AI-made demos honestly in the caption.',
+    label: 'Videos', noun: 'video', hint: 'Vertical (9:16) MP4 or WebM videos, up to 50 MB. They play silently on a loop in a swipeable row. The server compresses each new video within a few minutes of saving so it loads fast on phones, and makes a cover image if you don’t add one. Label AI-made demos honestly in the caption.',
     title: (r) => String(r.caption || 'Video'), sub: () => '', thumb: ['poster', 'avatar'],
     fields: [{ k: 'video', l: 'Video file', t: 'video', req: true }, { k: 'caption', l: 'Caption under the video', t: 'text' }, { k: 'avatar', l: 'Profile picture (optional)', t: 'image' }, { k: 'poster', l: 'Cover image (optional)', t: 'image' }],
   },

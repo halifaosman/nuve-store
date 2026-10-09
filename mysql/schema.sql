@@ -174,3 +174,11 @@ CREATE TABLE IF NOT EXISTS message_replies (
   KEY message_replies_msg_idx (message_id),
   CONSTRAINT message_replies_msg_fk FOREIGN KEY (message_id) REFERENCES messages(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Background compression of store videos (src/lib/video.ts). One row per original file.
+CREATE TABLE IF NOT EXISTS video_jobs (
+  src VARCHAR(255) NOT NULL PRIMARY KEY,
+  status VARCHAR(16) NOT NULL,
+  result VARCHAR(255) NULL,
+  updated_at DATETIME(3) NOT NULL DEFAULT (UTC_TIMESTAMP(3)) ON UPDATE CURRENT_TIMESTAMP(3)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

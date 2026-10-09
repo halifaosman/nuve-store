@@ -8,6 +8,7 @@ Live SnapBun store (Next.js 14 App Router + MySQL 8 + PayFast + Bob Go) running 
 - Every minute, `deploy/cron.sh` calls `/api/cron/expire`: expires unpaid EFT orders and retries Bob Go sends.
 - Database: MySQL on this server, database `nuve`. `mysql` connects directly using `~/.my.cnf`.
 - Uploads: `~/nuve-data/media` holds public images and videos, served at `/media/...`. `~/nuve-data/proofs` holds proofs of payment and is admin only. Code: `src/lib/files.ts`.
+- Store videos: the cron compresses each uploaded video in the background (`src/lib/video.ts`, ffmpeg, 720px H.264, no audio, faststart, auto cover image), swaps it in and deletes the original; progress in table `video_jobs`. The store loads each clip only when it scrolls near the screen; clips are not clickable.
 - Backups: `deploy/backup.sh` runs nightly at 02:30 and writes to `~/backups`, keeping 14 days.
 - Logs: `sudo journalctl -u nuve-store -n 100`.
 

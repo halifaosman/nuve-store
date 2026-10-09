@@ -104,16 +104,42 @@ export function ScrollButtons({ target, label }: { target: string; label: string
 }
 
 
-// Silent, looping, inline clips with no controls. Tapping one takes the shopper to the pack picker.
-export function VideoRow({ videos }: { videos: Video[] }) {
-  const row = useRef<HTMLDivElement>(null);
-  const [edge, setEdge] = useState({ left: false, right: false });
-  const keepPlaying = (el: HTMLVideoElement | null) => {
+// Silent, looping, inline clips with no controls. Tapping a clip does nothing.
+// Each clip only downloads when it scrolls near the screen, and pauses when it leaves, so the page opens fast.
+function LazyClip({ src, poster }: { src: string; poster?: string }) {
+  const ref = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    const el = ref.current;
     if (!el) return;
     el.muted = true;            // React doesn't always set the muted attribute; autoplay needs it
     el.defaultMuted = true;
-    el.play().catch(() => {});  // ignored if the browser blocks it (e.g. iPhone low power mode)
-  };
+    if (!('IntersectionObserver' in window)) { el.src = src; el.play().catch(() => {}); return; }
+    const io = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) {
+        if (!el.getAttribute('src')) { el.src = src; el.load(); }
+        el.play().catch(() => {}); // ignored if the browser blocks it (e.g. iPhone low power mode)
+      } else if (el.getAttribute('src')) el.pause();
+    }, { rootMargin: '200px 300px' });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [src]);
+  return (
+    <video
+      ref={ref}
+      poster={poster || undefined}
+      muted loop playsInline preload="none"
+      disablePictureInPicture
+      disableRemotePlayback
+      controlsList="nodownload nofullscreen noremoteplayback noplaybackrate"
+      tabIndex={-1}
+      aria-hidden="true"
+    />
+  );
+}
+
+export function VideoRow({ videos }: { videos: Video[] }) {
+  const row = useRef<HTMLDivElement>(null);
+  const [edge, setEdge] = useState({ left: false, right: false });
   const check = () => {
     const el = row.current;
     if (!el) return;
@@ -134,21 +160,11 @@ export function VideoRow({ videos }: { videos: Video[] }) {
       <div className="scroller vscroller" id="vids" ref={row} onScroll={check}>
         {videos.map((v) => (
           <div className="vcard" key={v.id}>
-            <a className="vbox" href="/#buy" aria-label={v.caption ? `${v.caption}: shop now` : 'Shop now'}>
-              <video
-                ref={keepPlaying}
-                src={v.video}
-                poster={v.poster || undefined}
-                muted loop playsInline autoPlay preload="metadata"
-                disablePictureInPicture
-                disableRemotePlayback
-                controlsList="nodownload nofullscreen noremoteplayback noplaybackrate"
-                tabIndex={-1}
-                aria-hidden="true"
-              />
+            <div className="vbox">
+              <LazyClip src={v.video} poster={v.poster} />
               {/* eslint-disable-next-line @next/next/no-img-element */}
               {v.avatar && <img className="av" src={v.avatar} alt="" />}
-            </a>
+            </div>
             <div className="vmeta">
               {v.caption && <b>{v.caption}</b>}
               <a className="vshop" href="/#buy">Shop now</a>

@@ -36,7 +36,7 @@ fi
 
 echo "==> Installing packages"
 apt-get update -y
-apt-get install -y ca-certificates curl gnupg git ufw nano mysql-server debian-keyring debian-archive-keyring apt-transport-https
+apt-get install -y ca-certificates curl gnupg git ufw nano ffmpeg mysql-server debian-keyring debian-archive-keyring apt-transport-https
 
 if ! command -v node >/dev/null || [ "$(node -v | cut -d. -f1 | tr -d v)" -lt 22 ]; then
   curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
