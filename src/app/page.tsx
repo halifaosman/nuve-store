@@ -2,7 +2,7 @@
 import { Header, Stars, Verified, DeliveryTimeline } from '@/components/chrome';
 import { Footer } from '@/components/footer';
 import { timeline } from '@/lib/delivery';
-import { Gallery, BuyBox, ScrollButtons, VideoRow, ReviewWidget } from '@/components/store';
+import { Gallery, BuyBox, ScrollButtons, VideoRow, ReviewWidget, TrackViewContent } from '@/components/store';
 import { DEFAULT_SETTINGS, getSettings, SiteSettings } from '@/lib/settings';
 import { getContent } from '@/lib/content';
 import { mediaUrl } from '@/lib/db';
@@ -91,6 +91,7 @@ export default async function Home() {
                 ))}
               </ul>
               <BuyBox bundles={s.bundles} />
+              <TrackViewContent value={(s.bundles.find((b) => b.tag === 'MOST POPULAR') || s.bundles[0]).price} />
               {trustTitle && (
                 <div className="trust">
                   {trustFaces.length > 0 && (

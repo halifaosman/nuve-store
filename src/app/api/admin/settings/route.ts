@@ -29,6 +29,7 @@ export async function GET() {
       bobgoSandbox: env.bobgoSandbox(),
       bobgoKey: !!env.bobgoKey(),
       bobgoWebhookSecret: !!env.bobgoWebhookSecret(),
+      meta: { pixelId: env.metaPixelId(), token: !!env.metaToken(), testCode: env.metaTestCode() },
     },
   });
 }
@@ -67,6 +68,7 @@ export async function PUT(req: NextRequest) {
   for (const k of ['readyDaysMin', 'readyDaysMax', 'deliverDaysMin', 'deliverDaysMax'] as const) {
     if (out[k] !== undefined) out[k] = Math.min(60, Math.max(0, Math.round(Number(out[k]) || 0)));
   }
+  if (out.trackingConsent !== undefined && !['notice', 'optin'].includes(String(out.trackingConsent))) out.trackingConsent = 'notice';
   if (out.ratingMode !== undefined && !['auto', 'custom', 'hidden'].includes(String(out.ratingMode))) out.ratingMode = 'auto';
   if (out.ratingValue !== undefined) out.ratingValue = Math.min(5, Math.max(0, Math.round(Number(out.ratingValue) * 10) / 10));
   if (out.ratingCount !== undefined) out.ratingCount = Math.max(0, Math.round(Number(out.ratingCount) || 0));

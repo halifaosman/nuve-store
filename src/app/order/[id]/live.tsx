@@ -1,10 +1,12 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { track } from '@/lib/track';
+import { useWhenTracking } from '@/components/meta-pixel';
 
 type Bank = { name: string; holder: string; number: string; branch: string; type: string };
 type Props = {
   id: string; token: string; method: string; initialStatus: string; expiresAt: string | null; reference: string; total: number;
-  fromPayfast: boolean; bank: Bank; popEmail: string; trackingUrl: string | null; trackingRef: string | null; serverNow: number;
+  fromPayfast: boolean; bank: Bank; qty?: number; orderNumber?: number; popEmail: string; trackingUrl: string | null; trackingRef: string | null; serverNow: number;
 };
 const rand = (n: number) => 'R' + n.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const PAID = ['paid', 'sending', 'sent_to_bobgo', 'shipped', 'delivered'];
@@ -26,6 +28,20 @@ export default function OrderLive(p: Props) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const [expiresAt, setExpiresAt] = useState(p.expiresAt);
+  const [trackReady, setTrackReady] = useState(false);
+  useWhenTracking(() => setTrackReady(true));
+  // Browser Purchase event (once per order). The server sends the same event with the same id; Meta keeps one.
+  // Skipped while PayFast is in test mode so test orders don't count as sales.
+  useEffect(() => {
+    if (!trackReady || !PAID.includes(status)) return;
+    const w = window as Window & { __nuveTrack?: { sandbox: boolean } };
+    if (w.__nuveTrack?.sandbox) return;
+    const key = `nuve_px_${p.id}`;
+    try { if (localStorage.getItem(key)) return; localStorage.setItem(key, '1'); } catch { /* storage blocked: may send twice, Meta dedupes */ }
+    const qty = p.qty || 1;
+    track('Purchase', { value: p.total, content_ids: ['SNAPBUN-BLK'], contents: [{ id: 'SNAPBUN-BLK', quantity: qty }], num_items: qty, order_id: p.orderNumber ? `NUV${p.orderNumber}` : undefined },
+      { eventId: `purchase-${p.id}`, browserOnly: true });
+  }, [trackReady, status, p.id, p.total, p.qty, p.orderNumber]);
   // Difference between the server's clock and this device's, so a wrong phone clock doesn't skew the timer.
   const [offset, setOffset] = useState(0);
   useEffect(() => { setOffset(p.serverNow - Date.now()); }, [p.serverNow]);

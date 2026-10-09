@@ -149,3 +149,18 @@ CREATE TABLE IF NOT EXISTS rate_hits (
   created_at DATETIME(3) NOT NULL DEFAULT (UTC_TIMESTAMP(3)),
   KEY rate_hits_idx (bucket, ip, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Ad tracking details captured at checkout, so the Purchase event can be sent to Meta when the order is paid
+CREATE TABLE IF NOT EXISTS order_tracking (
+  order_id CHAR(36) NOT NULL PRIMARY KEY,
+  fbp VARCHAR(200) NULL,
+  fbc VARCHAR(500) NULL,
+  client_ip VARCHAR(64) NULL,
+  user_agent VARCHAR(500) NULL,
+  source_url VARCHAR(500) NULL,
+  consent VARCHAR(10) NOT NULL DEFAULT 'yes',      -- 'no' = visitor declined ad tracking
+  purchase_sent_at DATETIME(3) NULL,
+  purchase_result VARCHAR(300) NULL,
+  created_at DATETIME(3) NOT NULL DEFAULT (UTC_TIMESTAMP(3)),
+  CONSTRAINT order_tracking_order_fk FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

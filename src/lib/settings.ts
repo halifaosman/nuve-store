@@ -27,6 +27,7 @@ export type SiteSettings = {
   policyPrivacy: string;
   policyTerms: string;
   policyShipping: string;
+  trackingConsent: string; // 'notice' (track unless declined) | 'optin' (track only after OK)
   ratingMode: string; // 'auto' (from your reviews) | 'custom' | 'hidden'
   ratingValue: number;
   ratingCount: number;
@@ -88,6 +89,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   policyPrivacy: '',
   policyTerms: '',
   policyShipping: '',
+  trackingConsent: 'notice',
   ratingMode: 'auto',
   ratingValue: 0,
   ratingCount: 0,

@@ -7,6 +7,7 @@ import { readCheckout } from '@/lib/validate';
 import { buildPaymentForm } from '@/lib/payfast';
 import { expireStale, logEvent } from '@/lib/orders';
 import { round2 } from '@/lib/money';
+import { browserFrom, declined } from '@/lib/meta';
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
@@ -53,6 +54,12 @@ export async function POST(req: NextRequest) {
   if (!order) {
     return NextResponse.json({ error: 'We could not create your order. Please try again.' }, { status: 500 });
   }
+  // Browser details for the Meta Purchase event, sent later when the payment is confirmed.
+  const br = browserFrom(req, String(body.pageUrl || '').slice(0, 500));
+  await insert('order_tracking', {
+    order_id: order.id, fbp: br.fbp || null, fbc: br.fbc || null, client_ip: br.ip || null, user_agent: (br.ua || '').slice(0, 500) || null,
+    source_url: String(body.pageUrl || '').slice(0, 500) || null, consent: declined(req) ? 'no' : 'yes',
+  }).catch((e) => console.warn('order_tracking insert failed', e));
   await logEvent(order.id, 'created', `Order placed (${method === 'eft' ? 'bank transfer' : 'PayFast'}), total R${total.toFixed(2)}`);
 
   if (method === 'eft') {

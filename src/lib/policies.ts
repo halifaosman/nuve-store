@@ -73,6 +73,7 @@ We only send you marketing messages if you have agreed to receive them, and ever
 We share only what each party needs to do its job:
 - PayFast, to process card and Instant EFT payments.
 - Bob Go and the courier companies it works with, to deliver your order and send you tracking updates.
+- Meta (Facebook and Instagram), to measure and improve our adverts. We share which pages you visit and what you buy on our website, together with your email address, phone number and name in scrambled (hashed) form, so Meta can match them to its own records. Meta acts as an independent controller under its own privacy policy. You can say no to this (see Cookies below).
 - Our hosting provider, which stores our website and database. Our servers may be located outside South Africa. Where that is the case, we only use providers bound by data protection laws or agreements that give your information a similar level of protection to POPIA.
 - Authorities, where the law requires it.
 
@@ -84,8 +85,10 @@ We keep order and payment records for 5 years, as South African tax law requires
 ## How we protect it
 Our website uses encryption (HTTPS). Access to customer information is limited to the people who need it to run the store, and proofs of payment can only be viewed by our team.
 
-## Cookies
-We use only the cookies needed for the website to work. If we add analytics or advertising tools in future, we will update this policy and ask for your consent where the law requires it.
+## Cookies and ad measurement
+We use cookies that the website needs to work, and the Meta Pixel and Meta Conversions API to see which of our adverts lead to visits and sales. These set cookies called _fbp and _fbc and send Meta details of the pages you view, items you choose and purchases you make, plus your contact details in scrambled (hashed) form.
+
+When you first visit, a notice lets you say no. If you do, we stop sending this information to Meta from your browser and from our server. You can change your mind by clearing your cookies for our website. You can also control the adverts you see in your Facebook and Instagram ad settings.
 
 ## Your rights
 Under POPIA you may:

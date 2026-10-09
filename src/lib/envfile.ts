@@ -12,6 +12,9 @@ export const EDITABLE: EnvField[] = [
   { group: 'Bob Go', key: 'BOBGO_SANDBOX', label: 'Test mode (sandbox)', secret: false, kind: 'bool', help: 'On = Bob Go sandbox. Off = real couriers.' },
   { group: 'Bob Go', key: 'BOBGO_API_KEY', label: 'API key', secret: true, kind: 'text' },
   { group: 'Bob Go', key: 'BOBGO_WEBHOOK_SECRET', label: 'Webhook secret', secret: true, kind: 'text' },
+  { group: 'Meta (Facebook) tracking', key: 'META_PIXEL_ID', label: 'Pixel ID', secret: false, kind: 'text', help: 'Events Manager → Data sources → your pixel. Numbers only.' },
+  { group: 'Meta (Facebook) tracking', key: 'META_CAPI_TOKEN', label: 'Conversions API access token', secret: true, kind: 'text', help: 'Events Manager → your pixel → Settings → Conversions API → Generate access token.' },
+  { group: 'Meta (Facebook) tracking', key: 'META_TEST_EVENT_CODE', label: 'Test event code (optional)', secret: false, kind: 'text', help: 'From Events Manager → Test events, e.g. TEST12345. Server events then show up there. Clear it when you are done testing.' },
   { group: 'Store', key: 'SITE_URL', label: 'Store address', secret: false, kind: 'url', help: 'e.g. https://nuve.co.za (no slash at the end). PayFast and Bob Go send updates here.' },
   { group: 'Store', key: 'ADMIN_PASSWORD', label: 'Admin password', secret: true, kind: 'password', help: 'At least 12 characters. You will need to log in again after changing it.' },
 ];
@@ -42,6 +45,8 @@ export function checkValue(f: EnvField, v: string): string {
   if (f.kind === 'url' && !/^https?:\/\/[^\s/]+$/.test(v)) return `${f.label}: use the form https://your-domain.co.za with nothing after the domain.`;
   if (f.kind === 'password' && v.length < 12) return `${f.label}: use at least 12 characters.`;
   if (f.key === 'PAYFAST_MERCHANT_ID' && v && !/^\d{5,12}$/.test(v)) return 'Merchant ID: numbers only, as shown in PayFast.';
+  if (f.key === 'META_PIXEL_ID' && v && !/^\d{10,20}$/.test(v)) return 'Pixel ID: numbers only, as shown in Events Manager.';
+  if (f.key === 'META_TEST_EVENT_CODE' && v && !/^[A-Za-z0-9]{3,30}$/.test(v)) return 'Test event code: letters and numbers only, e.g. TEST12345.';
   return '';
 }
 

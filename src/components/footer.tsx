@@ -1,4 +1,6 @@
 import FooterLinks from './footer-links';
+import MetaPixel from './meta-pixel';
+import { env } from '@/lib/env';
 import { DEFAULT_SETTINGS, getSettings } from '@/lib/settings';
 import { POLICY_TITLES, policyText } from '@/lib/policies';
 
@@ -12,6 +14,8 @@ export async function Footer() {
     shipping: { title: POLICY_TITLES.shipping, text: policyText('shipping', s) },
   };
   return (
+    <>
+    <MetaPixel pixelId={env.metaPixelId()} mode={s.trackingConsent === 'optin' ? 'optin' : 'notice'} sandbox={(() => { try { return env.payfastSandbox(); } catch { return true; } })()} />
     <footer>
       <div className="wrap foot">
         <div className="foot-brand">
@@ -30,5 +34,6 @@ export async function Footer() {
         <span>© {new Date().getFullYear()} {s.bizLegalName || s.bizName || 'Nuvé'}{s.bizRegNo ? ` · Reg. ${s.bizRegNo}` : ''}</span>
       </div>
     </footer>
+    </>
   );
 }

@@ -53,6 +53,20 @@ export default function Policies() {
           <div className="f"><label htmlFor="ba">Physical address (for legal notices)</label><textarea id="ba" rows={2} value={s.bizAddress} onChange={(e) => set('bizAddress', e.target.value)} /></div>
         </div>
 
+        <div className="card" style={card}>
+          <b>Cookie notice (Meta ad tracking)</b>
+          <p className="muted" style={{ margin: 0, fontSize: 14 }}>Shown at the bottom of the store when the Meta Pixel is set up under Server settings.</p>
+          {([
+            ['notice', 'Track unless the visitor says no', 'Common for South African stores. Visitors see the notice and can decline.'],
+            ['optin', 'Only track after the visitor says OK', 'Stricter (EU-style). Fewer visitors are tracked, so ads get less data.'],
+          ] as const).map(([v, l, h]) => (
+            <label key={v} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', cursor: 'pointer' }}>
+              <input type="radio" name="consent" checked={(s.trackingConsent || 'notice') === v} onChange={() => set('trackingConsent', v)} style={{ width: 20, height: 20, marginTop: 2 }} />
+              <span><b style={{ fontWeight: 600 }}>{l}</b><span className="muted" style={{ display: 'block', fontSize: 13 }}>{h}</span></span>
+            </label>
+          ))}
+        </div>
+
         {(['shipping', 'terms', 'privacy'] as Key[]).map((k) => {
           const f = FIELD[k];
           const custom = !!(s[f] || '').trim();

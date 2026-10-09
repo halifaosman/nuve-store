@@ -3,6 +3,16 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Bundle } from '@/lib/settings';
 import type { Review, Video } from '@/lib/content';
 import { Stars, Verified } from './chrome';
+import { track } from '@/lib/track';
+import { useWhenTracking } from './meta-pixel';
+
+const PRODUCT = 'SNAPBUN-BLK';
+
+/** Meta ViewContent for the product page. */
+export function TrackViewContent({ value }: { value: number }) {
+  useWhenTracking(() => track('ViewContent', { value, content_ids: [PRODUCT], contents: [{ id: PRODUCT, quantity: 1 }] }));
+  return null;
+}
 
 const rand = (n: number) => 'R' + n.toLocaleString('en-ZA');
 const Chevron = ({ dir }: { dir: 'l' | 'r' }) => (
@@ -75,7 +85,7 @@ export function BuyBox({ bundles }: { bundles: Bundle[] }) {
           </button>
         ))}
       </div>
-      <a className="btn" href={`/checkout?pack=${sel.qty}`} style={{ width: '100%', minHeight: 62, fontSize: 17 }}>BUY NOW — {rand(sel.price)}</a>
+      <a className="btn" href={`/checkout?pack=${sel.qty}`} onClick={() => track('AddToCart', { value: sel.price, content_ids: [PRODUCT], contents: [{ id: PRODUCT, quantity: sel.qty }], num_items: sel.qty })} style={{ width: '100%', minHeight: 62, fontSize: 17 }}>BUY NOW — {rand(sel.price)}</a>
     </>
   );
 }

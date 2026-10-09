@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import type { SiteSettings, Bundle } from '@/lib/settings';
 import { AdminShell, api } from '../ui';
 
-type Status = { siteUrl: string; payfastSandbox: boolean; payfast?: { merchantId: string; keyHint: string; passphraseLength: number; hadSpaces: string[]; publicSandbox: boolean }; bobgoSandbox: boolean; bobgoKey: boolean; bobgoWebhookSecret: boolean };
+type Status = { siteUrl: string; meta?: { pixelId: string; token: boolean; testCode: string }; payfastSandbox: boolean; payfast?: { merchantId: string; keyHint: string; passphraseLength: number; hadSpaces: string[]; publicSandbox: boolean }; bobgoSandbox: boolean; bobgoKey: boolean; bobgoWebhookSecret: boolean };
 const PROVINCES = ['Eastern Cape', 'Free State', 'Gauteng', 'KwaZulu-Natal', 'Limpopo', 'Mpumalanga', 'North West', 'Northern Cape', 'Western Cape'];
 
 const TEXT: [keyof SiteSettings, string, boolean?][] = [
@@ -11,6 +11,20 @@ const TEXT: [keyof SiteSettings, string, boolean?][] = [
   ['featTitle', 'Featured reviews heading'], ['videoHeading', 'Video section heading'], ['videoSub', 'Video section line'],
   ['photoHeading', 'Photo review cards heading'], ['stripLabel', 'Photo strip badge'], ['reviewsHeading', 'Review list heading'], ['shipping', 'Shipping & returns text', true],
 ];
+
+function MetaTest() {
+  const [busy, setBusy] = useState(false);
+  const [res, setRes] = useState<{ ok: boolean; result: string; hint?: string } | null>(null);
+  return (
+    <div style={{ paddingLeft: 18, marginTop: 6, display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <button type="button" className="ghost" style={{ alignSelf: 'flex-start', color: 'var(--ink)' }} disabled={busy}
+        onClick={async () => { setBusy(true); try { setRes(await api('/api/admin/meta-test', { method: 'POST' })); } catch (e) { setRes({ ok: false, result: (e as Error).message }); } setBusy(false); }}>
+        {busy ? 'Sending…' : 'Send test event to Meta'}
+      </button>
+      {res && <div style={{ fontSize: 14 }}><Dot ok={res.ok} />{res.result}{res.hint && <div className="muted">{res.hint}</div>}</div>}
+    </div>
+  );
+}
 
 function PayfastTest() {
   const [busy, setBusy] = useState(false);
@@ -83,6 +97,13 @@ export default function Settings() {
               .filter(([, v]) => !String(v || '').trim()).map(([l]) => l);
             return <div><Dot ok={!missing.length} />Bank transfer (manual EFT) {missing.length ? <>is <b>off at checkout</b>: fill in {missing.join(', ')} below, then Save settings</> : <>is <b>on</b> at checkout</>}</div>;
           })()}
+          {st.meta && (
+            <div>
+              <Dot ok={!!(st.meta.pixelId && st.meta.token)} />Meta tracking: {st.meta.pixelId ? <>Pixel <b>{st.meta.pixelId}</b> in the browser</> : 'Pixel ID not set'}{st.meta.token ? ' + Conversions API from the server' : st.meta.pixelId ? ', Conversions API token not set' : ''}{st.meta.testCode && <> · test code <b>{st.meta.testCode}</b> (remove when done testing)</>}
+              {st.meta.pixelId && st.meta.token && <MetaTest />}
+              {(!st.meta.pixelId || !st.meta.token) && <div className="muted" style={{ fontSize: 14, paddingLeft: 18 }}>Add them under <a href="/admin/server">Server settings</a>.</div>}
+            </div>
+          )}
           <div><Dot ok={st.bobgoWebhookSecret} />Bob Go tracking updates {st.bobgoWebhookSecret ? 'verified with your webhook secret' : 'not set up yet'}</div>
           <p className="muted" style={{ margin: 0, fontSize: 14 }}>In Bob Go, add a webhook for the topics <b>fulfillment/created</b>, <b>tracking/updated</b> and <b>order/updated</b> with the address <code>{st.siteUrl}/api/webhooks/bobgo</code>. Keys and secrets are changed under <a href="/admin/server">Server settings</a>.</p>
         </div>

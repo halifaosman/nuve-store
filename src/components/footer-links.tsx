@@ -1,5 +1,6 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { track } from '@/lib/track';
 
 type Panel = 'privacy' | 'terms' | 'shipping' | 'contact' | 'track';
 type Policy = { title: string; text: string };
@@ -48,7 +49,7 @@ function ContactForm({ email, phone }: { email: string; phone: string }) {
       const r = await fetch('/api/contact', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.fromEntries(f)) });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) setErr(j.error || 'Your message could not be sent. Please try again.');
-      else setDone(true);
+      else { setDone(true); track('Contact'); }
     } catch { setErr('Your message could not be sent. Check your connection and try again.'); }
     setBusy(false);
   }

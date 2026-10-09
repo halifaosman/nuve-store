@@ -322,3 +322,9 @@ footer a{color:#F2E7E1}
 .vbox{display:block;cursor:pointer}
 .vbox video{pointer-events:none}
 .vbox video::-webkit-media-controls,.vbox video::-webkit-media-controls-start-playback-button,.vbox video::-webkit-media-controls-panel{display:none!important;-webkit-appearance:none}
+
+/* cookie notice */
+.consent{position:fixed;left:16px;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));max-width:560px;margin:0 auto;z-index:70;background:var(--white);border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:14px 16px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:14px}
+.consent p{margin:0;flex:1 1 260px;color:var(--ink)}
+.consent div{display:flex;gap:8px;margin-left:auto}
+.consent .btn.small{min-height:40px}

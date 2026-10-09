@@ -1,6 +1,7 @@
 import { exec, insert, one, rows, tx, now } from './db';
 import { createBobGoOrder, findBobGoOrderId, bobgoConfigured, channelOrderNumber, OrderRow } from './bobgo';
 import { getSettings } from './settings';
+import { sendPurchase } from './meta';
 
 export const STATUS_LABEL: Record<string, string> = {
   pending_payment: 'Waiting for PayFast',
@@ -64,6 +65,7 @@ export async function markPaid(orderId: string, how: string, extra: { pf_payment
     return { ok: false, message: 'Order could not be marked paid' };
   }
   await logEvent(orderId, 'paid', `Payment confirmed (${how})`);
+  void sendPurchase(orderId).catch((e) => console.warn('Meta purchase failed', e)); // ad tracking; never blocks fulfilment
   return sendToBobGo(orderId);
 }
 
@@ -108,6 +110,15 @@ export async function sendToBobGo(orderId: string): Promise<PaidResult> {
     await logEvent(orderId, 'bobgo_error', msg);
     return { ok: false, message: msg };
   }
+}
+
+// Purchase events that failed to reach Meta (Meta accepts events up to 7 days old).
+export async function retryMetaPurchases(limit = 10) {
+  const due = await rows<{ order_id: string }>(
+    `SELECT t.order_id FROM order_tracking t JOIN orders o ON o.id = t.order_id
+      WHERE t.purchase_sent_at IS NULL AND t.consent <> 'no' AND o.paid_at IS NOT NULL
+        AND o.paid_at > UTC_TIMESTAMP(3) - INTERVAL 6 DAY ORDER BY o.paid_at LIMIT ?`, [limit]).catch(() => []);
+  for (const r of due) await sendPurchase(r.order_id).catch(() => {});
 }
 
 // Paid orders that never reached Bob Go (e.g. Bob Go was down). Called by the cron and when the admin opens.

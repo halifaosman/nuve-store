@@ -38,6 +38,10 @@ export const env = {
   payfastMerchantKey: () => need('PAYFAST_MERCHANT_KEY').trim(),
   payfastPassphrase: () => (process.env.PAYFAST_PASSPHRASE || '').trim().replace(/^["']|["']$/g, ''),
   bobgoSandbox: () => sandboxFlag('BOBGO_SANDBOX'),
+  // Meta (Facebook) Pixel + Conversions API
+  metaPixelId: () => (process.env.META_PIXEL_ID || '').trim(),
+  metaToken: () => (process.env.META_CAPI_TOKEN || '').trim(),
+  metaTestCode: () => (process.env.META_TEST_EVENT_CODE || '').trim(),
   bobgoKey: () => process.env.BOBGO_API_KEY || '',
   bobgoWebhookSecret: () => process.env.BOBGO_WEBHOOK_SECRET || '',
 };

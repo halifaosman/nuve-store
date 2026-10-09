@@ -1,6 +1,10 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import type { Bundle } from '@/lib/settings';
+import { track } from '@/lib/track';
+import { useWhenTracking } from '@/components/meta-pixel';
+
+const PRODUCT = 'SNAPBUN-BLK';
 
 const PROVINCES = ['Eastern Cape', 'Free State', 'Gauteng', 'KwaZulu-Natal', 'Limpopo', 'Mpumalanga', 'North West', 'Northern Cape', 'Western Cape'];
 type Rate = { service_name: string; total_price: number; description: string; min: string | null; max: string | null };
@@ -45,6 +49,7 @@ export default function CheckoutForm({ bundles, initialPack, eftAvailable, eftMi
   }, [addrKey]);
 
   useEffect(() => { if (pf && pfRef.current) pfRef.current.submit(); }, [pf]);
+  useWhenTracking(() => track('InitiateCheckout', { value: bundle.price, content_ids: [PRODUCT], contents: [{ id: PRODUCT, quantity: bundle.qty }], num_items: bundle.qty }));
 
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setF({ ...f, [k]: e.target.value });
 
@@ -53,8 +58,10 @@ export default function CheckoutForm({ bundles, initialPack, eftAvailable, eftMi
     setErr('');
     if (!rate) { setErr('Choose a delivery option.'); return; }
     setBusy(true);
+    track('AddPaymentInfo', { value: bundle.price + Number(rate.total_price || 0), content_ids: [PRODUCT], num_items: bundle.qty, payment_type: payment === 'eft' ? 'bank_transfer' : 'payfast' },
+      { user: { email: f.email, phone: f.phone, first: f.first, last: f.last, city: f.city, province: f.province, postal: f.postal } });
     try {
-      const r = await fetch('/api/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...f, pack, shipping: ship, payment }) });
+      const r = await fetch('/api/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...f, pack, shipping: ship, payment, pageUrl: location.href }) });
       const j = await r.json();
       if (!r.ok) {
         setErr(j.error || 'Something went wrong. Please try again.');
