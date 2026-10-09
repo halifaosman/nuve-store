@@ -23,6 +23,7 @@ mv .next-new .next
 sudo /usr/bin/systemctl restart nuve-store
 if up; then
   echo "Store updated and responding."
+  nohup bash "$(dirname "$0")/warm-images.sh" >/dev/null 2>&1 &   # prepare phone-sized photos in the background
 else
   echo "The new version did not start. Putting the previous version back."
   if [ -d .next-old ]; then

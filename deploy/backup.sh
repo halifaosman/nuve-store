@@ -15,7 +15,7 @@ mkdir -p "$OUT"
 chmod 700 "$OUT"
 
 mysqldump --single-transaction --no-tablespaces --routines nuve | gzip > "$OUT/db-$STAMP.sql.gz"
-tar -czf "$OUT/files-$STAMP.tar.gz" -C "$(dirname "$DATA")" "$(basename "$DATA")"
+tar -czf "$OUT/files-$STAMP.tar.gz" --exclude="$(basename "$DATA")/cache" -C "$(dirname "$DATA")" "$(basename "$DATA")"
 
 find "$OUT" -name 'db-*.sql.gz' -mtime +14 -delete
 find "$OUT" -name 'files-*.tar.gz' -mtime +14 -delete

@@ -19,9 +19,18 @@ function loadPixel(pixelId: string) {
   const n = function (...args: unknown[]) { (n.callMethod ? (n.callMethod as (...a: unknown[]) => void).apply(n, args) : n.queue!.push(args)); } as NonNullable<W['fbq']>;
   w.fbq = n; if (!w._fbq) w._fbq = n;
   n.push = n; n.loaded = true; n.version = '2.0'; n.queue = [];
-  const s = document.createElement('script'); s.async = true; s.src = 'https://connect.facebook.net/en_US/fbevents.js';
-  document.head.appendChild(s);
   n('init', pixelId);
+  // Meta's script is big. Events wait in the queue above (and the server copy goes straight away), so load it
+  // only once the visitor scrolls/taps or after a few seconds. That keeps it from slowing the first view on phones.
+  let done = false;
+  const go = () => {
+    if (done) return; done = true;
+    ['scroll', 'pointerdown', 'keydown', 'touchstart'].forEach((ev) => window.removeEventListener(ev, go));
+    const s = document.createElement('script'); s.async = true; s.src = 'https://connect.facebook.net/en_US/fbevents.js';
+    document.head.appendChild(s);
+  };
+  ['scroll', 'pointerdown', 'keydown', 'touchstart'].forEach((ev) => window.addEventListener(ev, go, { once: true, passive: true }));
+  setTimeout(go, 3500);
 }
 
 // If the visitor arrived from a Meta ad (?fbclid=...), keep the click id even if the Pixel script is blocked.

@@ -1,3 +1,11 @@
+// Fonts are served from this site (no waiting on Google Fonts before the page can show). Latin set only.
+import '@fontsource/manrope/latin-400.css';
+import '@fontsource/manrope/latin-500.css';
+import '@fontsource/manrope/latin-600.css';
+import '@fontsource/manrope/latin-700.css';
+import '@fontsource/manrope/latin-800.css';
+import '@fontsource/dm-serif-display/latin-400.css';
+import '@fontsource/dm-serif-display/latin-400-italic.css';
 import './globals.css';
 import type { Metadata, Viewport } from 'next';
 
@@ -11,9 +19,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en-ZA">
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Manrope:wght@400;500;600;700;800&display=swap" />
       </head>
       <body style={{ margin: 0 }}>{children}</body>
     </html>

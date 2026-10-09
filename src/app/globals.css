@@ -64,7 +64,7 @@ section{padding-block:80px}
 .tick svg{width:15px;height:15px}
 .price{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
 .price b{font-size:36px;font-weight:800;font-variant-numeric:tabular-nums}
-.price s{font-size:19px;color:var(--soft)}
+.price s{font-size:19px;color:var(--muted)}
 .pill{background:var(--ink);color:var(--white);font-size:12px;font-weight:800;letter-spacing:.08em;padding:6px 11px;border-radius:6px}
 .bundles{display:flex;flex-direction:column;gap:10px}
 .bundle{width:100%;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:15px 18px;border-radius:16px;border:2px solid var(--line);background:var(--white);cursor:pointer;text-align:left;min-height:70px}
@@ -202,7 +202,7 @@ details p{margin:0 0 17px;color:var(--muted);white-space:pre-line}
 .rlist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:24px}
 .ritem{border:1px solid var(--line);border-radius:16px;padding:20px;background:var(--white);display:flex;flex-direction:column;gap:10px;min-width:0}
 .ritem .hd{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
-.ritem h4{margin:0;font-size:16px}
+.ritem h3{margin:0;font-size:16px;font-family:var(--body);font-weight:800}
 .ritem p{margin:0;color:var(--muted);font-size:15px}
 .ritem .ph-img{width:96px;height:96px;object-fit:cover;border-radius:10px}
 .ritem .by{font-size:13px;color:var(--soft);display:flex;gap:10px;align-items:center;flex-wrap:wrap}

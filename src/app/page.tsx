@@ -7,6 +7,7 @@ import { DEFAULT_SETTINGS, getSettings, SiteSettings } from '@/lib/settings';
 import { getContent } from '@/lib/content';
 import { mediaUrl } from '@/lib/db';
 import Protect from '@/components/protect';
+import { imgProps } from '@/lib/img';
 
 export const dynamic = 'force-dynamic';
 
@@ -98,7 +99,7 @@ export default async function Home() {
                 <div className="trust">
                   {trustFaces.length > 0 && (
                     <div className="avs">
-                      {trustFaces.map((src, i) => <img key={i} src={src} alt="" />)}
+                      {trustFaces.map((src, i) => <img key={i} {...imgProps(src, '40px', { max: 160, min: 96, fallback: 96 })} alt="" loading="lazy" decoding="async" />)}
                       <span className="avs-tick" aria-hidden="true"><svg viewBox="0 0 24 24" width="12" height="12"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" /></svg></span>
                     </div>
                   )}
@@ -115,7 +116,7 @@ export default async function Home() {
               })()}
               {payTags.length > 0 && <div className="pays">{payTags.map((p) => <span key={p}>{p}</span>)}</div>}
               {(s.payLogos || []).length > 0 && (
-                <div className="paylogos" style={{ '--plh': `${s.payLogoSize || 40}px` } as React.CSSProperties}>{s.payLogos.map((p, i) => <img key={i} src={mediaUrl(p)} alt="" loading="lazy" />)}</div>
+                <div className="paylogos" style={{ '--plh': `${s.payLogoSize || 40}px` } as React.CSSProperties}>{s.payLogos.map((p, i) => <img key={i} {...imgProps(mediaUrl(p), '200px', { max: 480, fallback: 320 })} alt="" loading="lazy" decoding="async" />)}</div>
               )}
               <div>
                 <details open><summary>What are the benefits?</summary><p>{'A full, sleek bun in about 5 seconds, with no pins, clips or elastics.\n• Holds through work, school runs and workouts\n• Adds volume so fine hair looks thicker\n• No tight elastics tugging at your edges\n• The fibre wrap blends into dark hair, so the tool stays hidden\n• Folds flat into any handbag or gym bag'}</p></details>
@@ -136,7 +137,7 @@ export default async function Home() {
                   <Stars n={r.stars} />
                   {r.title && <h3>&ldquo;{r.title}&rdquo;</h3>}
                   <p>{r.body}</p>
-                  <div className="who">{(r.avatar || r.photo) && <img src={r.avatar || r.photo} alt="" />}<b>{r.name}</b>{r.verified && <Verified />}</div>
+                  <div className="who">{(r.avatar || r.photo) && <img {...imgProps(r.avatar || r.photo, '40px', { max: 160, min: 96, fallback: 96 })} alt="" loading="lazy" decoding="async" />}<b>{r.name}</b>{r.verified && <Verified />}</div>
                 </div>
               ))}
             </div>
@@ -151,7 +152,7 @@ export default async function Home() {
         )}
 
         <section className="tint"><div className="wrap split">
-          <div className="media"><img src={IMG('backbun')} alt="Sleek high bun made with the SnapBun" /></div>
+          <div className="media"><img {...imgProps(IMG('backbun'), '(max-width: 900px) 100vw, 560px')} alt="Sleek high bun made with the SnapBun" loading="lazy" decoding="async" /></div>
           <div className="txt">
             <span className="eyebrow">The 5-second morning</span>
             <h2 className="h2">Sleek Bun. Zero Pins. Done Before Your Coffee Is.</h2>
@@ -167,7 +168,7 @@ export default async function Home() {
             <div className="scroller" id="pcards">
               {photoReviews.map((r) => (
                 <div className="pcard" key={r.id}>
-                  <img src={r.photo} alt={`Photo from ${r.name}`} loading="lazy" />
+                  <img {...imgProps(r.photo, '(max-width: 640px) 90vw, 360px', { max: 828, fallback: 480 })} alt={`Photo from ${r.name}`} loading="lazy" decoding="async" />
                   <div className="in"><Stars n={r.stars} />{r.title && <h3>&ldquo;{r.title}&rdquo;</h3>}<p>{r.body}</p><div className="h">@{r.name}{r.verified && <div><Verified /></div>}</div></div>
                 </div>
               ))}
@@ -186,7 +187,7 @@ export default async function Home() {
             </div>
           </div>
           <div className="strip">
-            <div className="marq"><div className="marq-track">{strip.concat(strip).map((p, i) => <img key={i} src={p.src} alt={i < strip.length ? p.alt : ''} loading="lazy" />)}</div></div>
+            <div className="marq"><div className="marq-track">{strip.concat(strip).map((p, i) => <img key={i} {...imgProps(p.src, '260px', { max: 640, fallback: 480 })} alt={i < strip.length ? p.alt : ''} loading="lazy" decoding="async" />)}</div></div>
             <div className="strip-badge">{s.stripLabel}</div>
           </div>
         </section>
@@ -194,7 +195,7 @@ export default async function Home() {
         {logos.length > 0 && (
           <section className="logos" style={{ paddingBlock: 44 }}>
             <div className="wrap center"><span className="eyebrow" style={{ color: 'var(--soft)' }}>As seen on</span></div>
-            <div className="marq" style={{ marginTop: 22 }}><div className="marq-track">{logos.concat(logos).map((l, i) => <img key={i} src={l.image} alt={l.name} />)}</div></div>
+            <div className="marq" style={{ marginTop: 22 }}><div className="marq-track">{logos.concat(logos).map((l, i) => <img key={i} {...imgProps(l.image, '160px', { max: 480, fallback: 320 })} alt={l.name} loading="lazy" decoding="async" />)}</div></div>
           </section>
         )}
 
@@ -203,7 +204,7 @@ export default async function Home() {
           <div className="grid4">
             {STEPS.map(([img, t, d], i) => (
               <div className="step" key={t}>
-                <img src={IMG(img)} alt={`Step ${i + 1}: ${t}`} loading="lazy" />
+                <img {...imgProps(IMG(img), '(max-width: 640px) 50vw, 300px', { max: 828, fallback: 480 })} alt={`Step ${i + 1}: ${t}`} loading="lazy" decoding="async" />
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><span className="n">{i + 1}</span><b style={{ fontSize: 18 }}>{t}</b></div>
                 <p>{d}</p>
               </div>
@@ -215,7 +216,7 @@ export default async function Home() {
           <div className="center"><h2 className="h2">One Bun. Every Part of Your Day.</h2></div>
           <div className="grid3">
             {[['gym', 'Gym & sport', 'Locked in through squats, sprints and spin class. No mid-set re-tie.'], ['office', 'Work & school run', 'Polished from the 7am drop-off to the 5pm meeting.'], ['wedding', 'Weddings & nights out', 'A sleek, elegant updo without the salon bill.']].map(([img, t, d]) => (
-              <div className="occ" key={t}><img src={IMG(img)} alt={t} loading="lazy" /><b>{t}</b><p>{d}</p></div>
+              <div className="occ" key={t}><img {...imgProps(IMG(img), '(max-width: 900px) 100vw, 400px', { max: 1080 })} alt={t} loading="lazy" decoding="async" /><b>{t}</b><p>{d}</p></div>
             ))}
           </div>
         </div></section>
@@ -223,7 +224,7 @@ export default async function Home() {
         {c.sections.map((sec, i) => (
           <section key={sec.id} className={i % 2 ? 'tint' : ''}>
             <div className={'wrap split' + (sec.side === 'Image right' ? ' flip' : '')}>
-              {sec.image && <div className="media"><img src={sec.image} alt={sec.heading} /></div>}
+              {sec.image && <div className="media"><img {...imgProps(sec.image, '(max-width: 900px) 100vw, 560px')} alt={sec.heading} loading="lazy" decoding="async" /></div>}
               <div className="txt" style={sec.image ? undefined : { gridColumn: '1 / -1', maxWidth: 760, margin: '0 auto', textAlign: 'center', alignItems: 'center' }}>
                 {sec.eyebrow && <span className="eyebrow">{sec.eyebrow}</span>}
                 <h2 className="h2">{sec.heading}</h2>

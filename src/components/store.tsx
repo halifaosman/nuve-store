@@ -5,6 +5,7 @@ import type { Review, Video } from '@/lib/content';
 import { Stars, Verified } from './chrome';
 import { track } from '@/lib/track';
 import { useWhenTracking } from './meta-pixel';
+import { imgProps, resized } from '@/lib/img';
 
 const PRODUCT = 'SNAPBUN-BLK';
 
@@ -26,6 +27,15 @@ export type GalleryImage = { src: string; alt: string; contain?: boolean };
 export function Gallery({ images, saveBadge }: { images: GalleryImage[]; saveBadge: string }) {
   const [i, setI] = useState(0);
   const [paused, setPaused] = useState(false);
+  // Only the first photo loads with the page (it's the one people see). The rest load once the page has settled,
+  // so they don't compete with it on a slow phone connection.
+  const [rest, setRest] = useState(false);
+  useEffect(() => {
+    const later = () => setTimeout(() => setRest(true), 1200);
+    if (document.readyState === 'complete') { const t = later(); return () => clearTimeout(t); }
+    window.addEventListener('load', later, { once: true });
+    return () => window.removeEventListener('load', later);
+  }, []);
   useEffect(() => {
     if (paused) return;
     const t = setInterval(() => { if (!document.hidden) setI((x) => (x + 1) % images.length); }, 4500);
@@ -35,9 +45,11 @@ export function Gallery({ images, saveBadge }: { images: GalleryImage[]; saveBad
   return (
     <div className="gallery">
       <div className="stage">
-        {images.map((g, k) => (
+        {images.map((g, k) => (k === 0 || rest || k === i) && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img key={g.src} src={g.src} alt={g.alt} className={(g.contain ? 'contain ' : '') + (k === i ? 'on' : '')} loading={k === 0 ? 'eager' : 'lazy'} />
+          <img key={g.src} {...imgProps(g.src, '(max-width: 900px) calc(100vw - 40px), 600px', { fallback: 720 })} alt={g.alt}
+            className={(g.contain ? 'contain ' : '') + (k === i ? 'on' : '')}
+            loading={k === 0 ? 'eager' : 'lazy'} decoding={k === 0 ? 'sync' : 'async'} {...(k === 0 ? { fetchPriority: 'high' as const } : {})} />
         ))}
         <button className="arrow" style={{ left: 14 }} aria-label="Previous image" onClick={() => go(i - 1)}><Chevron dir="l" /></button>
         <button className="arrow" style={{ right: 14 }} aria-label="Next image" onClick={() => go(i + 1)}><Chevron dir="r" /></button>
@@ -48,7 +60,7 @@ export function Gallery({ images, saveBadge }: { images: GalleryImage[]; saveBad
         {images.map((g, k) => (
           <button key={g.src} className={k === i ? 'on' : ''} aria-label={`Show image ${k + 1}`} onClick={() => go(k)}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={g.src} alt="" />
+            <img {...imgProps(g.src, '80px', { max: 320, fallback: 160 })} alt="" loading="lazy" decoding="async" />
           </button>
         ))}
       </div>
@@ -80,7 +92,7 @@ export function BuyBox({ bundles }: { bundles: Bundle[] }) {
             <span className="r">
               {b.tag && <span className="tag">{b.tag}</span>}
               <b>{rand(b.price)}</b>
-              {b.compare > 0 && <s style={{ fontSize: 13, color: 'var(--soft)' }}>{rand(b.compare)}</s>}
+              {b.compare > 0 && <s style={{ fontSize: 13, color: 'var(--muted)' }}>{rand(b.compare)}</s>}
             </span>
           </button>
         ))}
@@ -126,7 +138,7 @@ function LazyClip({ src, poster }: { src: string; poster?: string }) {
   return (
     <video
       ref={ref}
-      poster={poster || undefined}
+      poster={poster ? resized(poster, 480) : undefined}
       muted loop playsInline preload="none"
       disablePictureInPicture
       disableRemotePlayback
@@ -163,7 +175,7 @@ export function VideoRow({ videos }: { videos: Video[] }) {
             <div className="vbox">
               <LazyClip src={v.video} poster={v.poster} />
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              {v.avatar && <img className="av" src={v.avatar} alt="" />}
+              {v.avatar && <img className="av" {...imgProps(v.avatar, '48px', { max: 160, min: 96, fallback: 96 })} alt="" loading="lazy" decoding="async" />}
             </div>
             <div className="vmeta">
               {v.caption && <b>{v.caption}</b>}
@@ -208,10 +220,10 @@ export function ReviewWidget({ reviews }: { reviews: Review[] }) {
         {list.slice(0, shown).map((r) => (
           <article className="ritem" key={r.id}>
             <div className="hd"><Stars n={r.stars} />{r.verified && <Verified />}</div>
-            {r.title && <h4>{r.title}</h4>}
+            {r.title && <h3>{r.title}</h3>}
             <p>{r.body}</p>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            {r.photo && <img className="ph-img" src={r.photo} alt={`Photo from ${r.name}`} loading="lazy" />}
+            {r.photo && <img className="ph-img" {...imgProps(r.photo, '(max-width: 640px) 90vw, 320px', { max: 828, fallback: 480 })} alt={`Photo from ${r.name}`} loading="lazy" decoding="async" />}
             <div className="by"><b style={{ color: 'var(--ink)' }}>{r.name}</b><span>{new Date(r.created_at).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' })}</span></div>
           </article>
         ))}

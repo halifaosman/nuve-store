@@ -10,6 +10,7 @@ Live SnapBun store (Next.js 14 App Router + MySQL 8 + PayFast + Bob Go) running 
 - Database: MySQL on this server, database `nuve`. `mysql` connects directly using `~/.my.cnf`.
 - Uploads: `~/nuve-data/media` holds public images and videos, served at `/media/...`. `~/nuve-data/proofs` holds proofs of payment and is admin only. Code: `src/lib/files.ts`.
 - Store videos: the cron compresses each uploaded video in the background (`src/lib/video.ts`, ffmpeg, 720px H.264, no audio, faststart, auto cover image), swaps it in and deletes the original; progress in table `video_jobs`. The store loads each clip only when it scrolls near the screen; clips are not clickable.
+- Store photos: `/img/<width>/images/...` and `/img/<width>/media/...` (`src/app/img/[...p]/route.ts`, sharp) serve resized WebP copies, cached in `~/nuve-data/cache/img` (not backed up). Use `imgProps(src, sizes)` from `src/lib/img.ts` for every store `<img>`. `deploy/warm-images.sh` pre-makes them after each update. Fonts are self-hosted (@fontsource), no Google Fonts link. The Meta Pixel script loads on first scroll/tap or after 3.5 s (events queue until then).
 - Backups: `deploy/backup.sh` runs nightly at 02:30 and writes to `~/backups`, keeping 14 days.
 - Logs: `sudo journalctl -u nuve-store -n 100`.
 
