@@ -12,6 +12,28 @@ const TEXT: [keyof SiteSettings, string, boolean?][] = [
   ['photoHeading', 'Photo review cards heading'], ['stripLabel', 'Photo strip badge'], ['reviewsHeading', 'Review list heading'], ['shipping', 'Shipping & returns text', true],
 ];
 
+function PayfastTest() {
+  const [busy, setBusy] = useState(false);
+  const [res, setRes] = useState<{ mode: string; merchantId: string; tries: { label: string; ok: boolean; detail: string }[]; verdict: string } | null>(null);
+  const [err, setErr] = useState('');
+  return (
+    <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <button type="button" className="ghost" style={{ alignSelf: 'flex-start', color: 'var(--ink)' }} disabled={busy}
+        onClick={async () => { setBusy(true); setErr(''); setRes(null); try { setRes(await api('/api/admin/payfast-test', { method: 'POST' })); } catch (e) { setErr((e as Error).message); } setBusy(false); }}>
+        {busy ? 'Testing with PayFast…' : 'Test PayFast connection'}
+      </button>
+      {err && <span className="err">{err}</span>}
+      {res && (
+        <div style={{ border: '1px solid var(--line)', borderRadius: 10, padding: 12, background: 'var(--white)', color: 'var(--ink)', display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <span className="muted" style={{ fontSize: 13 }}>PayFast {res.mode} · merchant {res.merchantId} · no money moves in this test</span>
+          {res.tries.map((t) => <div key={t.label}><Dot ok={t.ok} /><b>{t.label}:</b> {t.detail}</div>)}
+          <div style={{ fontWeight: 700, marginTop: 4 }}>{res.verdict}</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Dot({ ok }: { ok: boolean }) {
   return <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 99, background: ok ? 'var(--ok)' : 'var(--berry)', marginRight: 8 }} />;
 }
@@ -50,6 +72,7 @@ export default function Settings() {
               Merchant ID <b>{st.payfast.merchantId || 'missing'}</b> · merchant key {st.payfast.keyHint} · passphrase {st.payfast.passphraseLength ? <b>set ({st.payfast.passphraseLength} characters)</b> : <b>not set</b>}
               {st.payfast.publicSandbox && st.payfast.passphraseLength !== 12 && <div style={{ color: 'var(--berry)' }}>PayFast&apos;s shared test account (10000100) uses the passphrase jt7NOE43FZPn (12 characters).</div>}
               {!st.payfast.publicSandbox && <div>The passphrase must match the one under <b>Settings → Developer settings</b> in this PayFast account exactly, or be empty if none is set there.</div>}
+              <PayfastTest />
               {st.payfast.hadSpaces.length > 0 && <div>Extra spaces were found around {st.payfast.hadSpaces.join(', ')} in .env. They are now ignored, but it is worth tidying them.</div>}
             </div>
           )}
