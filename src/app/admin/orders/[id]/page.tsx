@@ -1,6 +1,6 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
-import { AdminShell, api, Countdown, rand, StatusPill, when } from '../../ui';
+import { AdminShell, api, confirmAndDelete, Countdown, rand, StatusPill, when } from '../../ui';
 
 type Order = Record<string, unknown> & {
   id: string; order_number: number; status: string; payment_method: string; total: number; subtotal: number; shipping_cost: number; shipping_method: string;
@@ -39,7 +39,12 @@ export default function OrderDetail({ params }: { params: { id: string } }) {
   const unpaid = !o.paid_at && !['cancelled'].includes(o.status);
 
   return (
-    <AdminShell title={`Order #${o.order_number}`} actions={<StatusPill status={o.status} />}>
+    <AdminShell title={`Order #${o.order_number}`} actions={<div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+      <StatusPill status={o.status} />
+      <button className="ghost" style={{ color: 'var(--berry)', borderColor: 'var(--berry)' }} onClick={async () => {
+        try { const n = await confirmAndDelete({ ids: [o.id] }, 'order'); if (n) window.location.href = '/admin'; } catch (e) { setErr((e as Error).message); }
+      }}>Delete order</button>
+    </div>}>
       {msg && <div className="card" style={{ borderColor: 'var(--ok)' }}>{msg}</div>}
       {err && <div className="card" style={{ borderColor: 'var(--berry)' }}><p className="err">{err}</p></div>}
       {['cancelled', 'expired'].includes(o.status) && (
@@ -56,7 +61,7 @@ export default function OrderDetail({ params }: { params: { id: string } }) {
               {o.status === 'awaiting_eft' && o.expires_at && <div>Expires in <Countdown to={o.expires_at} /></div>}
               {o.status === 'expired' && <div className="muted">This order expired. If the money did arrive, you can still mark it paid.</div>}
               {popUrl ? (
-                <div><a href={popUrl} target="_blank" rel="noopener noreferrer" className="btn small">Open proof of payment</a> <span className="muted" style={{ fontSize: 13 }}>Link works for 10 minutes</span></div>
+                <div><a href={popUrl} target="_blank" rel="noopener noreferrer" className="btn small">Open proof of payment</a></div>
               ) : <div className="muted">No proof of payment uploaded yet.</div>}
               <p className="muted" style={{ margin: 0, fontSize: 14 }}>Only mark it paid once you see the money in your bank account. A screenshot alone can be faked.</p>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>

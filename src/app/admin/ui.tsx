@@ -97,3 +97,29 @@ export function AdminShell({ title, children, actions }: { title: string; childr
 export const table: React.CSSProperties = { width: '100%', borderCollapse: 'collapse', background: 'var(--white)', fontSize: 14 };
 export const th: React.CSSProperties = { textAlign: 'left', padding: '10px 12px', borderBottom: '1px solid var(--line)', fontSize: 12, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--muted)', whiteSpace: 'nowrap' };
 export const td: React.CSSProperties = { padding: '12px', borderBottom: '1px solid var(--line)', verticalAlign: 'middle' };
+
+type DeleteSummary = { orders: number; customers: number; paid: number; inBobGo: number; deleted?: number; error?: string };
+
+/**
+ * Deletes orders/customers after showing what will go. Paid orders need the word DELETE typed in.
+ * Returns the number of orders deleted, or null if cancelled.
+ */
+export async function confirmAndDelete(body: Record<string, unknown>, what: string): Promise<number | null> {
+  const pre = await api<DeleteSummary>('/api/admin/orders/delete', { method: 'POST', json: { ...body, dryRun: true } });
+  if (!pre.orders) { alert(`Nothing to delete: no ${what} found.`); return null; }
+  const lines = [
+    `Delete ${pre.orders} order${pre.orders === 1 ? '' : 's'}${pre.customers > 1 || body.emails || body.preset === 'dead_customers' ? ` from ${pre.customers} customer${pre.customers === 1 ? '' : 's'}` : ''}?`,
+    'Their history and proofs of payment are removed too. This cannot be undone.',
+  ];
+  if (pre.inBobGo) lines.push(`\n${pre.inBobGo} of them were sent to Bob Go. Deleting here does NOT cancel them in Bob Go, so cancel them there too if needed.`);
+  let confirmPaid = false;
+  if (pre.paid) {
+    lines.push(`\n${pre.paid} of them were PAID. Only delete paid orders if they were tests: real sales records must be kept for 5 years for tax.`, '\nType DELETE to confirm.');
+    const typed = prompt(lines.join('\n'));
+    if (typed === null) return null;
+    if (typed.trim().toUpperCase() !== 'DELETE') { alert('Nothing was deleted (DELETE was not typed).'); return null; }
+    confirmPaid = true;
+  } else if (!confirm(lines.join('\n'))) return null;
+  const res = await api<DeleteSummary>('/api/admin/orders/delete', { method: 'POST', json: { ...body, confirmPaid } });
+  return res.deleted ?? 0;
+}

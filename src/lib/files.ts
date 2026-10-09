@@ -27,7 +27,9 @@ export async function saveFile(bucket: Bucket, name: string, data: Buffer): Prom
 export async function removeFiles(bucket: Bucket, names: string[]): Promise<void> {
   for (const n of names) {
     const full = filePath(bucket, n);
-    if (full) await fs.unlink(full).catch(() => {});
+    if (!full) continue;
+    await fs.unlink(full).catch(() => {});
+    if (n.includes('/')) await fs.rmdir(path.dirname(full)).catch(() => {}); // only succeeds if the folder is now empty
   }
 }
 

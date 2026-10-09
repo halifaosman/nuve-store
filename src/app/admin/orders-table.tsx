@@ -22,18 +22,22 @@ export function useOrders(group: string, q: string) {
   return { orders, err, reload: load };
 }
 
-export function OrdersTable({ orders, showTimer }: { orders: OrderLite[]; showTimer?: boolean }) {
+export function OrdersTable({ orders, showTimer, selected, onSelect }: { orders: OrderLite[]; showTimer?: boolean; selected?: Set<string>; onSelect?: (ids: string[], on: boolean) => void }) {
   if (!orders.length) return <div className="card muted">No orders here yet.</div>;
+  const pick = !!(selected && onSelect);
+  const allOn = pick && orders.every((o) => selected!.has(o.id));
   return (
     <div style={{ overflowX: 'auto', border: '1px solid var(--line)', borderRadius: 14 }}>
       <table style={table}>
         <thead><tr>
+          {pick && <th style={{ ...th, width: 36 }}><input type="checkbox" aria-label="Select all orders shown" checked={allOn} onChange={(e) => onSelect!(orders.map((o) => o.id), e.target.checked)} style={{ width: 18, height: 18 }} /></th>}
           <th style={th}>Order</th><th style={th}>Customer</th><th style={th}>Status</th><th style={th}>Payment</th>
           {showTimer && <th style={th}>Time left</th>}<th style={th}>Total</th><th style={th}>Placed</th><th style={th}>Bob Go</th>
         </tr></thead>
         <tbody>
           {orders.map((o) => (
-            <tr key={o.id}>
+            <tr key={o.id} style={pick && selected!.has(o.id) ? { background: 'var(--berry-tint)' } : undefined}>
+              {pick && <td style={td}><input type="checkbox" aria-label={`Select order ${o.order_number}`} checked={selected!.has(o.id)} onChange={(e) => onSelect!([o.id], e.target.checked)} style={{ width: 18, height: 18 }} /></td>}
               <td style={td}><Link href={`/admin/orders/${o.id}`} style={{ fontWeight: 800 }}>#{o.order_number}</Link></td>
               <td style={td}><div style={{ fontWeight: 700 }}>{o.customer_first} {o.customer_last}</div><div className="muted" style={{ fontSize: 13 }}>{o.email}</div></td>
               <td style={td}><StatusPill status={o.status} />{o.pop_path && o.status === 'eft_review' && <div style={{ fontSize: 12, marginTop: 4 }}>Proof attached</div>}</td>
