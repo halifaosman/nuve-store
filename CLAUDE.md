@@ -4,7 +4,8 @@ Live SnapBun store (Next.js 14 App Router + MySQL 8 + PayFast + Bob Go) running 
 
 ## How it runs on this server
 - Code: `~/nuve-store` (user `nuve`). Settings and secrets: `~/nuve-store/.env`. Never print, commit or paste `.env` values.
-- Service: `nuve-store` (systemd) runs `next start` on 127.0.0.1:3000. Caddy serves it over HTTPS (`/etc/caddy/Caddyfile`).
+- Service: `nuve-store` (systemd) runs `next start` on 127.0.0.1:3000. Caddy serves it over HTTPS (`/etc/caddy/Caddyfile`, written by `deploy/caddy.sh`, run as root).
+- Cloudflare proxies the domain (SSL mode Full (strict)). Caddy sets `X-Forwarded-For` to `CF-Connecting-IP` only for requests from Cloudflare's IP ranges, so the app's first X-Forwarded-For entry is the real visitor (PayFast ITN IP check, rate limits, Meta). Never turn on Cloudflare Bot Fight Mode or challenges for `/api/` (PayFast and Bob Go webhooks).
 - Every minute, `deploy/cron.sh` calls `/api/cron/expire`: expires unpaid EFT orders and retries Bob Go sends.
 - Database: MySQL on this server, database `nuve`. `mysql` connects directly using `~/.my.cnf`.
 - Uploads: `~/nuve-data/media` holds public images and videos, served at `/media/...`. `~/nuve-data/proofs` holds proofs of payment and is admin only. Code: `src/lib/files.ts`.

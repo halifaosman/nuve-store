@@ -159,16 +159,7 @@ systemctl enable nuve-store
 systemctl restart nuve-store
 
 # ---------- HTTPS ----------
-cat > /etc/caddy/Caddyfile <<EOF
-$DOMAIN {
-  encode gzip
-  request_body {
-    max_size 60MB
-  }
-  reverse_proxy 127.0.0.1:3000
-}
-EOF
-systemctl reload caddy || systemctl restart caddy
+bash "$APP_DIR/deploy/caddy.sh" "$DOMAIN"   # also handles visitors coming through Cloudflare
 
 # ---------- Scheduled jobs ----------
 chmod +x "$APP_DIR/deploy/"*.sh
