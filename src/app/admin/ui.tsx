@@ -42,7 +42,7 @@ const NAV = [
   { href: '/admin/eft', label: 'Pending EFT', badge: 'eft' },
   { href: '/admin/customers', label: 'Customers' },
   { href: '/admin/content', label: 'Page content' },
-  { href: '/admin/badge', label: 'Trust badge & rating' },
+  { href: '/admin/badge', label: 'Badges & payments' },
   { href: '/admin/settings', label: 'Store settings' },
 ];
 

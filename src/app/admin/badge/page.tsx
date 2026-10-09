@@ -15,6 +15,7 @@ const media = (p: string) => (/^https?:|^\//.test(p) ? p : `/media/${p}`);
 export default function TrustBadge() {
   const [s, setS] = useState<SiteSettings | null>(null);
   const [busy, setBusy] = useState(false);
+  const [logoBusy, setLogoBusy] = useState(false);
   const [msg, setMsg] = useState('');
   const [err, setErr] = useState('');
   const [reviews, setReviews] = useState<{ n: number; avg: number } | null>(null);
@@ -42,7 +43,7 @@ export default function TrustBadge() {
 
   const card = { display: 'flex', flexDirection: 'column' as const, gap: 14 };
   return (
-    <AdminShell title="Trust badge & rating">
+    <AdminShell title="Trust badge, rating & payments">
       <form onSubmit={save} style={{ display: 'flex', flexDirection: 'column', gap: 18, maxWidth: 820 }} noValidate>
         <p className="muted" style={{ margin: 0 }}>Edit the star rating at the top of the product and the badges just under the <b>Buy now</b> button.</p>
         <div className="card" style={card}>
@@ -132,6 +133,54 @@ export default function TrustBadge() {
               </div>
             </div>
           )}
+        </div>
+
+        <div className="card" style={card}>
+          <b>Payment logos (under Add to cart)</b>
+          <div className="f">
+            <label htmlFor="pl">Payment names as small text tags (comma separated)</label>
+            <input id="pl" value={s.payLabels} onChange={(e) => set('payLabels', e.target.value)} placeholder="VISA, MASTERCARD, INSTANT EFT" />
+            <span className="muted" style={{ fontSize: 13 }}>Type a single <b>-</b> to hide the text tags, e.g. once you have uploaded logos instead.</span>
+          </div>
+          <div className="f">
+            <label>Logo images (PNG, JPG or WebP, up to 12)</label>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'stretch' }}>
+              {(s.payLogos || []).map((p, i, all) => (
+                <div key={p + i} style={{ border: '1px solid var(--line)', borderRadius: 10, background: 'var(--white)', padding: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, width: 120 }}>
+                  <div style={{ height: 40, display: 'flex', alignItems: 'center' }}><img src={media(p)} alt="" style={{ maxHeight: 32, maxWidth: 100, objectFit: 'contain' }} /></div>
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    <button type="button" className="ghost" aria-label="Move left" disabled={i === 0} onClick={() => { const l = [...all]; [l[i - 1], l[i]] = [l[i], l[i - 1]]; set('payLogos', l); }} style={{ minHeight: 32, padding: '0 10px' }}>←</button>
+                    <button type="button" className="ghost" aria-label="Move right" disabled={i === all.length - 1} onClick={() => { const l = [...all]; [l[i + 1], l[i]] = [l[i], l[i + 1]]; set('payLogos', l); }} style={{ minHeight: 32, padding: '0 10px' }}>→</button>
+                    <button type="button" className="ghost" aria-label="Remove" onClick={() => set('payLogos', all.filter((_, j) => j !== i))} style={{ minHeight: 32, padding: '0 10px', color: 'var(--berry)' }}>✕</button>
+                  </div>
+                </div>
+              ))}
+              {(s.payLogos || []).length < 12 && (
+                <label className="ghost" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 120, minHeight: 84, borderStyle: 'dashed', borderRadius: 10, color: 'var(--ink)', cursor: 'pointer' }}>
+                  {logoBusy ? 'Uploading…' : '+ Add logos'}
+                  <input type="file" accept="image/png,image/jpeg,image/webp" multiple hidden onChange={async (e) => {
+                    const files = Array.from(e.target.files || []); e.target.value = '';
+                    if (!files.length) return;
+                    setErr(''); setLogoBusy(true);
+                    try {
+                      const added: string[] = [];
+                      for (const f of files.slice(0, 12 - (s.payLogos || []).length)) added.push(await uploadPhoto(f));
+                      set('payLogos', [...(s.payLogos || []), ...added]);
+                    } catch (e2) { setErr((e2 as Error).message); }
+                    setLogoBusy(false);
+                  }} />
+                </label>
+              )}
+            </div>
+            <span className="muted" style={{ fontSize: 13 }}>Use the official logos from each provider&apos;s merchant or brand page (PayFast, Ozow, Visa and Mastercard all offer them), and only show methods your checkout actually accepts. Transparent PNGs look best.</span>
+          </div>
+          <div>
+            <span className="muted" style={{ fontSize: 13 }}>Preview</span>
+            <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 520, padding: 14, background: 'var(--paper)', borderRadius: 12 }}>
+              {s.payLabels.trim() !== '-' && s.payLabels.trim() && <div className="pays">{s.payLabels.split(',').map((t) => t.trim()).filter(Boolean).map((t) => <span key={t}>{t}</span>)}</div>}
+              {(s.payLogos || []).length > 0 && <div className="paylogos">{s.payLogos.map((p, i) => <img key={i} src={media(p)} alt="" />)}</div>}
+            </div>
+          </div>
         </div>
 
         <div className="card" style={card}>

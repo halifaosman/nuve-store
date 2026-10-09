@@ -61,6 +61,8 @@ export default async function Home() {
   ].slice(0, 3);
   const photoReviews = R.filter((r) => r.photo);
   const faces = R.filter((r) => r.avatar || r.photo).slice(0, 3);
+  // Payment tags under Add to cart. Typing "-" in the admin hides them.
+  const payTags = s.payLabels.trim() === '-' ? [] : s.payLabels.split(',').map((t) => t.trim()).filter(Boolean);
   // Trust badge under Add to cart: its own photos from Store settings, else review photos.
   const trustTitle = s.trustTitle || (s.trustCount ? `Trusted by ${s.trustCount} customers` : '');
   const trustFaces = (s.trustAvatars || []).length ? s.trustAvatars.map((p) => mediaUrl(p)) : faces.map((r) => r.avatar || r.photo);
@@ -107,7 +109,10 @@ export default async function Home() {
                   { icon: 'gift', date: t.delivered, label: 'Delivered' },
                 ]} />;
               })()}
-              <div className="pays">{['VISA', 'MASTERCARD', 'INSTANT EFT', 'SNAPSCAN', 'BANK TRANSFER'].map((p) => <span key={p}>{p}</span>)}</div>
+              {payTags.length > 0 && <div className="pays">{payTags.map((p) => <span key={p}>{p}</span>)}</div>}
+              {(s.payLogos || []).length > 0 && (
+                <div className="paylogos">{s.payLogos.map((p, i) => <img key={i} src={mediaUrl(p)} alt="" loading="lazy" />)}</div>
+              )}
               <div>
                 <details open><summary>What are the benefits?</summary><p>{'A full, sleek bun in about 5 seconds, with no pins, clips or elastics.\n• Holds through work, school runs and workouts\n• Adds volume so fine hair looks thicker\n• No tight elastics tugging at your edges\n• The fibre wrap blends into dark hair, so the tool stays hidden\n• Folds flat into any handbag or gym bag'}</p></details>
                 <details><summary>How do I use it?</summary><p>{'1. Brush your hair into a ponytail.\n2. Thread your hair through the slit in the middle and slide the SnapBun to the ends.\n3. Roll it up to the base of your ponytail.\n4. Bend the ends down and snap them together. Spread your hair to cover it.'}</p></details>

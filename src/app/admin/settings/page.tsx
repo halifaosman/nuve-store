@@ -116,7 +116,7 @@ export default function Settings() {
 
         <div className="card" style={{ ...card, gap: 6 }}>
           <b>Trust badge and delivery timeline</b>
-          <p className="muted" style={{ margin: 0, fontSize: 14 }}>These now have their own page: <a href="/admin/badge">Trust badge</a> in the menu above.</p>
+          <p className="muted" style={{ margin: 0, fontSize: 14 }}>These now live on their own page: <a href="/admin/badge">Badges &amp; payments</a> in the menu above (also payment logos and the star rating).</p>
         </div>
 
         <div className="card" style={card}>

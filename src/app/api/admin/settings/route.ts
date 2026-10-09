@@ -37,6 +37,12 @@ export async function PUT(req: NextRequest) {
       price: Math.max(5, Number(b.price) || 0), compare: Math.max(0, Number(b.compare) || 0), tag: String(b.tag || '').slice(0, 30),
     }));
   }
+  if (out.payLogos !== undefined) {
+    out.payLogos = (Array.isArray(out.payLogos) ? out.payLogos : [])
+      .map((v) => String(v || '').trim())
+      .filter((v) => /^[0-9A-Za-z][0-9A-Za-z/_.-]*$/.test(v) && !v.includes('..'))
+      .slice(0, 12);
+  }
   if (out.trustAvatars !== undefined) {
     out.trustAvatars = (Array.isArray(out.trustAvatars) ? out.trustAvatars : [])
       .map((v) => String(v || '').trim())

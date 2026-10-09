@@ -12,6 +12,8 @@ export type SiteSettings = {
   trustTitle: string;
   trustText: string;
   trustAvatars: string[];
+  payLabels: string; // payment names shown as small text tags, comma separated; empty hides them
+  payLogos: string[]; // uploaded payment logo images, shown in a row under the tags
   ratingMode: string; // 'auto' (from your reviews) | 'custom' | 'hidden'
   ratingValue: number;
   ratingCount: number;
@@ -60,6 +62,8 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   trustTitle: '',
   trustText: 'who switched to a 5-second bun',
   trustAvatars: [],
+  payLabels: 'VISA, MASTERCARD, INSTANT EFT, SNAPSCAN, BANK TRANSFER',
+  payLogos: [],
   ratingMode: 'auto',
   ratingValue: 0,
   ratingCount: 0,
