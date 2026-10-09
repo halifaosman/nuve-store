@@ -58,8 +58,12 @@ export function buildPaymentForm(o: {
   };
   const phone = o.phone.replace(/\D/g, '');
   if (/^0\d{9}$/.test(phone)) fields.cell_number = phone;
+  // Post exactly the values that were signed: trimmed, and empty ones left out (PayFast skips blanks too).
   const ordered: Record<string, string> = {};
-  for (const k of FORM_ORDER) if (fields[k] !== undefined) ordered[k] = fields[k];
+  for (const k of FORM_ORDER) {
+    const v = fields[k] === undefined ? '' : String(fields[k]).trim();
+    if (v !== '') ordered[k] = v;
+  }
   ordered.signature = formSignature(ordered, env.payfastPassphrase());
   return { action: processUrl(), fields: ordered };
 }

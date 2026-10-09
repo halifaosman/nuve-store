@@ -12,6 +12,20 @@ export async function GET() {
     status: {
       siteUrl: env.siteUrl(),
       payfastSandbox: env.payfastSandbox(),
+      payfast: (() => {
+        // Safe to show: the merchant ID is public (it is in every payment form). Key and passphrase are only hinted.
+        const raw = (n: string) => process.env[n] || '';
+        let id = '', key = '';
+        try { id = env.payfastMerchantId(); key = env.payfastMerchantKey(); } catch { /* missing */ }
+        const pass = env.payfastPassphrase();
+        return {
+          merchantId: id,
+          keyHint: key ? `…${key.slice(-3)} (${key.length} characters)` : 'missing',
+          passphraseLength: pass.length,
+          hadSpaces: ['PAYFAST_MERCHANT_ID', 'PAYFAST_MERCHANT_KEY', 'PAYFAST_PASSPHRASE'].filter((n) => raw(n) !== raw(n).trim()),
+          publicSandbox: id === '10000100',
+        };
+      })(),
       bobgoSandbox: env.bobgoSandbox(),
       bobgoKey: !!env.bobgoKey(),
       bobgoWebhookSecret: !!env.bobgoWebhookSecret(),

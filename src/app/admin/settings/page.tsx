@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import type { SiteSettings, Bundle } from '@/lib/settings';
 import { AdminShell, api } from '../ui';
 
-type Status = { siteUrl: string; payfastSandbox: boolean; bobgoSandbox: boolean; bobgoKey: boolean; bobgoWebhookSecret: boolean };
+type Status = { siteUrl: string; payfastSandbox: boolean; payfast?: { merchantId: string; keyHint: string; passphraseLength: number; hadSpaces: string[]; publicSandbox: boolean }; bobgoSandbox: boolean; bobgoKey: boolean; bobgoWebhookSecret: boolean };
 const PROVINCES = ['Eastern Cape', 'Free State', 'Gauteng', 'KwaZulu-Natal', 'Limpopo', 'Mpumalanga', 'North West', 'Northern Cape', 'Western Cape'];
 
 const TEXT: [keyof SiteSettings, string, boolean?][] = [
@@ -45,6 +45,14 @@ export default function Settings() {
         <div className="card" style={{ ...card, gap: 8 }}>
           <b>Connections</b>
           <div><Dot ok={!st.payfastSandbox} />PayFast is in <b>{st.payfastSandbox ? 'test (sandbox)' : 'live'}</b> mode</div>
+          {st.payfast && (
+            <div className="muted" style={{ fontSize: 14, paddingLeft: 18 }}>
+              Merchant ID <b>{st.payfast.merchantId || 'missing'}</b> · merchant key {st.payfast.keyHint} · passphrase {st.payfast.passphraseLength ? <b>set ({st.payfast.passphraseLength} characters)</b> : <b>not set</b>}
+              {st.payfast.publicSandbox && st.payfast.passphraseLength !== 12 && <div style={{ color: 'var(--berry)' }}>PayFast&apos;s shared test account (10000100) uses the passphrase jt7NOE43FZPn (12 characters).</div>}
+              {!st.payfast.publicSandbox && <div>The passphrase must match the one under <b>Settings → Developer settings</b> in this PayFast account exactly, or be empty if none is set there.</div>}
+              {st.payfast.hadSpaces.length > 0 && <div>Extra spaces were found around {st.payfast.hadSpaces.join(', ')} in .env. They are now ignored, but it is worth tidying them.</div>}
+            </div>
+          )}
           <div><Dot ok={st.bobgoKey} />Bob Go API key {st.bobgoKey ? `connected (${st.bobgoSandbox ? 'sandbox' : 'live'})` : 'not set: orders will not reach Bob Go'}</div>
           {(() => {
             const b = saved || s;

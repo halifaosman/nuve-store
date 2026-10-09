@@ -33,9 +33,10 @@ export const env = {
   // Where uploaded images, videos and proofs of payment are kept (outside the code folder on the server).
   dataDir: () => process.env.DATA_DIR || path.resolve(process.cwd(), '.data'),
   payfastSandbox: () => sandboxFlag('PAYFAST_SANDBOX'),
-  payfastMerchantId: () => need('PAYFAST_MERCHANT_ID'),
-  payfastMerchantKey: () => need('PAYFAST_MERCHANT_KEY'),
-  payfastPassphrase: () => process.env.PAYFAST_PASSPHRASE || '',
+  // Trimmed: a space or line break pasted after a key or passphrase breaks the PayFast signature.
+  payfastMerchantId: () => need('PAYFAST_MERCHANT_ID').trim(),
+  payfastMerchantKey: () => need('PAYFAST_MERCHANT_KEY').trim(),
+  payfastPassphrase: () => (process.env.PAYFAST_PASSPHRASE || '').trim().replace(/^["']|["']$/g, ''),
   bobgoSandbox: () => sandboxFlag('BOBGO_SANDBOX'),
   bobgoKey: () => process.env.BOBGO_API_KEY || '',
   bobgoWebhookSecret: () => process.env.BOBGO_WEBHOOK_SECRET || '',
