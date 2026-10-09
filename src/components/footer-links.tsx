@@ -63,7 +63,7 @@ function ContactForm({ email, phone }: { email: string; phone: string }) {
   }
   return (
     <form className="m-form" onSubmit={submit} noValidate>
-      {(email || phone) && <p className="muted" style={{ margin: 0 }}>You can also reach us {email && <>at <a href={`mailto:${email}`}>{email}</a></>}{email && phone && ' or '}{phone && <>on <a href={`tel:${phone.replace(/\s/g, '')}`}>{phone}</a></>}.</p>}
+      {(email || phone) && <p className="muted" style={{ margin: 0 }}>You can also reach us {email && <>at <a href={`mailto:${email}`}>{email}</a></>}{email && phone && ' or '}{phone && <>on <a href={`tel:${phone.replace(/\D/g, '').replace(/^0/, '+27')}`}>{phone}</a></>}.</p>}
       <div className="row2">
         <div className="f"><label htmlFor="c-name">Name</label><input id="c-name" name="name" autoComplete="name" required /></div>
         <div className="f"><label htmlFor="c-email">Email</label><input id="c-email" name="email" type="email" autoComplete="email" required /></div>

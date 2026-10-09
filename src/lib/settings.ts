@@ -85,7 +85,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   bizVatNo: '',
   bizAddress: '',
   bizEmail: '',
-  bizPhone: '',
+  bizPhone: '078 141 8525',
   policyPrivacy: '',
   policyTerms: '',
   policyShipping: '',

@@ -24,7 +24,7 @@ export async function Footer() {
           {(s.bizEmail || s.bizPhone) && (
             <div className="foot-contact">
               {s.bizEmail && <a href={`mailto:${s.bizEmail}`}>{s.bizEmail}</a>}
-              {s.bizPhone && <a href={`tel:${s.bizPhone.replace(/\s/g, '')}`}>{s.bizPhone}</a>}
+              {s.bizPhone && <a href={`tel:${s.bizPhone.replace(/\D/g, '').replace(/^0/, '+27')}`}>{s.bizPhone}</a>}
             </div>
           )}
         </div>
