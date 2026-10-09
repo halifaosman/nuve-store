@@ -37,6 +37,7 @@ export async function PUT(req: NextRequest) {
       price: Math.max(5, Number(b.price) || 0), compare: Math.max(0, Number(b.compare) || 0), tag: String(b.tag || '').slice(0, 30),
     }));
   }
+  if (out.payLogoSize !== undefined) out.payLogoSize = Math.min(90, Math.max(16, Math.round(Number(out.payLogoSize) || 40)));
   if (out.payLogos !== undefined) {
     out.payLogos = (Array.isArray(out.payLogos) ? out.payLogos : [])
       .map((v) => String(v || '').trim())

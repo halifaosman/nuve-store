@@ -82,8 +82,9 @@ section{padding-block:80px}
 .trust b{display:block;font-size:16px}
 .trust span{font-size:13.5px;color:var(--muted)}
 .pays{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
-.paylogos{display:flex;flex-wrap:wrap;gap:10px 14px;justify-content:center;align-items:center}
-.paylogos img{height:26px;width:auto;max-width:90px;object-fit:contain;display:block}
+.paylogos{--plh:40px;display:flex;flex-wrap:wrap;gap:12px 18px;justify-content:center;align-items:center}
+.paylogos img{height:var(--plh);width:auto;max-width:calc(var(--plh) * 4);object-fit:contain;display:block}
+@media (max-width:600px){.paylogos img{height:calc(var(--plh) * .85)}}
 .pays span{border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-size:11px;font-weight:800;color:var(--muted);background:var(--white)}
 details{border-top:1px solid var(--line)}
 details:last-of-type{border-bottom:1px solid var(--line)}

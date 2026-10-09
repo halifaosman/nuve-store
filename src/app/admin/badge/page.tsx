@@ -174,11 +174,15 @@ export default function TrustBadge() {
             </div>
             <span className="muted" style={{ fontSize: 13 }}>Use the official logos from each provider&apos;s merchant or brand page (PayFast, Ozow, Visa and Mastercard all offer them), and only show methods your checkout actually accepts. Transparent PNGs look best.</span>
           </div>
+          <div className="f">
+            <label htmlFor="pls">Logo size: {s.payLogoSize || 40}px tall</label>
+            <input id="pls" type="range" min={20} max={80} step={2} value={s.payLogoSize || 40} onChange={(e) => set('payLogoSize', Number(e.target.value))} style={{ maxWidth: 360, accentColor: 'var(--berry)' }} />
+          </div>
           <div>
-            <span className="muted" style={{ fontSize: 13 }}>Preview</span>
-            <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 520, padding: 14, background: 'var(--paper)', borderRadius: 12 }}>
+            <span className="muted" style={{ fontSize: 13 }}>Preview (same width as the store)</span>
+            <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 540, padding: 14, background: 'var(--paper)', borderRadius: 12 }}>
               {s.payLabels.trim() !== '-' && s.payLabels.trim() && <div className="pays">{s.payLabels.split(',').map((t) => t.trim()).filter(Boolean).map((t) => <span key={t}>{t}</span>)}</div>}
-              {(s.payLogos || []).length > 0 && <div className="paylogos">{s.payLogos.map((p, i) => <img key={i} src={media(p)} alt="" />)}</div>}
+              {(s.payLogos || []).length > 0 && <div className="paylogos" style={{ '--plh': `${s.payLogoSize || 40}px` } as React.CSSProperties}>{s.payLogos.map((p, i) => <img key={i} src={media(p)} alt="" />)}</div>}
             </div>
           </div>
         </div>

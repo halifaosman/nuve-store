@@ -111,7 +111,7 @@ export default async function Home() {
               })()}
               {payTags.length > 0 && <div className="pays">{payTags.map((p) => <span key={p}>{p}</span>)}</div>}
               {(s.payLogos || []).length > 0 && (
-                <div className="paylogos">{s.payLogos.map((p, i) => <img key={i} src={mediaUrl(p)} alt="" loading="lazy" />)}</div>
+                <div className="paylogos" style={{ '--plh': `${s.payLogoSize || 40}px` } as React.CSSProperties}>{s.payLogos.map((p, i) => <img key={i} src={mediaUrl(p)} alt="" loading="lazy" />)}</div>
               )}
               <div>
                 <details open><summary>What are the benefits?</summary><p>{'A full, sleek bun in about 5 seconds, with no pins, clips or elastics.\n• Holds through work, school runs and workouts\n• Adds volume so fine hair looks thicker\n• No tight elastics tugging at your edges\n• The fibre wrap blends into dark hair, so the tool stays hidden\n• Folds flat into any handbag or gym bag'}</p></details>

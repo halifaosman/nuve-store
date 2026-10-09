@@ -14,6 +14,7 @@ export type SiteSettings = {
   trustAvatars: string[];
   payLabels: string; // payment names shown as small text tags, comma separated; empty hides them
   payLogos: string[]; // uploaded payment logo images, shown in a row under the tags
+  payLogoSize: number; // logo height in pixels on the store
   ratingMode: string; // 'auto' (from your reviews) | 'custom' | 'hidden'
   ratingValue: number;
   ratingCount: number;
@@ -64,6 +65,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   trustAvatars: [],
   payLabels: 'VISA, MASTERCARD, INSTANT EFT, SNAPSCAN, BANK TRANSFER',
   payLogos: [],
+  payLogoSize: 40,
   ratingMode: 'auto',
   ratingValue: 0,
   ratingCount: 0,
