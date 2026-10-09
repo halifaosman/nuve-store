@@ -26,6 +26,8 @@ Live SnapBun store (Next.js 14 App Router + MySQL 8 + PayFast + Bob Go) running 
 - Prices, copy and bank details live in the admin under Store settings (database), not in the code.
 - Footer pop-ups (`src/components/footer.tsx`, `footer-links.tsx`): Track My Order (`/api/track`, order number + email/phone, live Bob Go `GET /tracking`), Contact Us (`/api/contact` → `messages` table → admin Messages), and policies from `src/lib/policies.ts` (templates filled from settings; custom text in admin Policies & contact). Opening `/#track`, `/#contact`, `/#terms`, `/#privacy` or `/#shipping` opens the pop-up.
 
+- Customer order app (PWA): `/my/[id]?t=<token>` (`src/app/my/[id]/`: app.tsx, road.tsx animated van map, manifest per order) with data from `/api/my/[id]` (journey stages in `src/lib/journey.ts`, live Bob Go tracking cached 60s, chat). Customer messages land in `messages` (topic 'Order app'); admin replies go in `message_replies` via `/api/admin/messages/[id]/reply`. Service worker `public/sw.js` is scoped to `/my/`. The order page links to it.
+
 - Meta tracking: browser Pixel (`src/components/meta-pixel.tsx`, `src/lib/track.ts`, loaded from the footer) plus Conversions API from the server (`src/lib/meta.ts`, `/api/meta/event`). Browser and server copies share an event_id. Purchase is sent by the server when an order is marked paid (`markPaid` → `sendPurchase`, retried by the cron), using browser details saved at checkout in `order_tracking`. Skipped in PayFast sandbox unless `META_TEST_EVENT_CODE` is set. Visitors who decline the cookie notice (`nuve_consent=no`) are not tracked.
 
 ## Rules

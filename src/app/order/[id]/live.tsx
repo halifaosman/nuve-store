@@ -103,7 +103,9 @@ export default function OrderLive(p: Props) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 8 }}>
         <h1 className="h2">{status === 'delivered' ? 'Delivered. Enjoy your SnapBun!' : status === 'shipped' ? 'Your order is on its way' : 'Payment received. Thank you!'}</h1>
-        <p className="lede">We&apos;re packing your SnapBun. You&apos;ll get tracking details by email and SMS from our courier partner once it ships.</p>
+        <p className="lede">{status === 'delivered' ? 'Your parcel was delivered. Questions about your order? Message us in the Nuvé app below.'
+          : status === 'shipped' ? 'Your parcel is with the courier. Follow it in the Nuvé app below.'
+          : 'We’re packing your SnapBun. You’ll get tracking details by email and SMS from our courier partner once it ships.'}</p>
         {tracking.ref && (
           <div className="card"><b>Tracking number:</b> {tracking.ref}{' '}{tracking.url && <a href={tracking.url} target="_blank" rel="noopener noreferrer">Track your parcel</a>}</div>
         )}

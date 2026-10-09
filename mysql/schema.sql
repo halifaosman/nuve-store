@@ -164,3 +164,13 @@ CREATE TABLE IF NOT EXISTS order_tracking (
   created_at DATETIME(3) NOT NULL DEFAULT (UTC_TIMESTAMP(3)),
   CONSTRAINT order_tracking_order_fk FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Replies from the shop to contact messages, shown to the customer in their order app
+CREATE TABLE IF NOT EXISTS message_replies (
+  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  message_id CHAR(36) NOT NULL,
+  body TEXT NOT NULL,
+  created_at DATETIME(3) NOT NULL DEFAULT (UTC_TIMESTAMP(3)),
+  KEY message_replies_msg_idx (message_id),
+  CONSTRAINT message_replies_msg_fk FOREIGN KEY (message_id) REFERENCES messages(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

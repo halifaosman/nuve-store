@@ -40,6 +40,16 @@ export default async function OrderPage({ params, searchParams }: { params: { id
           trackingRef={o.tracking_reference}
           serverNow={Date.now()}
         />
+        {!['expired', 'cancelled'].includes(o.status) && (
+          <a className="app-cta" href={`/my/${o.id}?t=${encodeURIComponent(o.access_token)}`}>
+            <img src="/brand/app-192.png" alt="" width={52} height={52} />
+            <span>
+              <b>Follow your delivery in the Nuvé app</b>
+              <small>Watch your parcel travel to your door and message us about your order. Add it to your home screen for one-tap tracking.</small>
+            </span>
+            <span className="app-cta-go">Open</span>
+          </a>
+        )}
         <div className="card" style={{ marginTop: 22, display: 'flex', flexDirection: 'column', gap: 10 }}>
           <b>Order summary</b>
           {items.map((i, k) => <div key={k} className="sumline"><span>{i.description}</span><span>{rand(i.pack_price ?? i.unit_price * i.qty)}</span></div>)}
