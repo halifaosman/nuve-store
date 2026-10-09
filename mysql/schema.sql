@@ -182,3 +182,23 @@ CREATE TABLE IF NOT EXISTS video_jobs (
   result VARCHAR(255) NULL,
   updated_at DATETIME(3) NOT NULL DEFAULT (UTC_TIMESTAMP(3)) ON UPDATE CURRENT_TIMESTAMP(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Facebook Page comment auto-replies (src/lib/fbauto.ts). One row per comment the bot has looked at.
+CREATE TABLE IF NOT EXISTS fb_comments (
+  comment_id VARCHAR(80) NOT NULL PRIMARY KEY,
+  post_id VARCHAR(80) NOT NULL,
+  parent_id VARCHAR(80) NULL,
+  from_id VARCHAR(40) NULL,
+  from_name VARCHAR(120) NULL,
+  message TEXT NULL,
+  commented_at DATETIME(3) NOT NULL,
+  rule_key VARCHAR(40) NULL,
+  action VARCHAR(20) NOT NULL,          -- replied | hidden | flagged | skipped | would_reply | would_hide | error
+  reply TEXT NULL,
+  note VARCHAR(255) NULL,
+  flag TINYINT(1) NOT NULL DEFAULT 0,   -- listed under "Needs you" in the admin
+  done TINYINT(1) NOT NULL DEFAULT 0,   -- owner ticked a flagged comment as handled
+  created_at DATETIME(3) NOT NULL DEFAULT (UTC_TIMESTAMP(3)),
+  KEY fb_comments_created_idx (created_at),
+  KEY fb_comments_from_post_idx (from_id, post_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

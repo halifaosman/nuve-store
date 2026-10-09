@@ -42,6 +42,9 @@ export const env = {
   metaPixelId: () => (process.env.META_PIXEL_ID || '').trim(),
   metaToken: () => (process.env.META_CAPI_TOKEN || '').trim(),
   metaTestCode: () => (process.env.META_TEST_EVENT_CODE || '').trim(),
+  // Facebook Page comment auto-replies (src/lib/fbauto.ts)
+  fbPageToken: () => (process.env.META_PAGE_TOKEN || '').trim(),
+  fbPageId: () => (process.env.META_PAGE_ID || '').trim(),
   bobgoKey: () => process.env.BOBGO_API_KEY || '',
   bobgoWebhookSecret: () => process.env.BOBGO_WEBHOOK_SECRET || '',
 };

@@ -30,6 +30,8 @@ Live SnapBun store (Next.js 14 App Router + MySQL 8 + PayFast + Bob Go) running 
 
 - Customer order app (PWA): `/my/[id]?t=<token>` (`src/app/my/[id]/`: app.tsx, road.tsx animated van map, manifest per order) with data from `/api/my/[id]` (journey stages in `src/lib/journey.ts`, live Bob Go tracking cached 60s, chat). Customer messages land in `messages` (topic 'Order app'); admin replies go in `message_replies` via `/api/admin/messages/[id]/reply`. Service worker `public/sw.js` is scoped to `/my/`. The order page links to it.
 
+- Facebook comment auto-replies: `src/lib/fbauto.ts`, run by the cron every minute. Polls the Page's `feed` and `ads_posts` via the Graph API (token `META_PAGE_TOKEN`, Page `META_PAGE_ID`, set in Server settings), matches keyword topics (settings key `fbauto`), replies / hides / flags, logs to `fb_comments`. Admin page: Facebook replies. Test mode logs without posting. Only comments newer than when it was switched on are handled.
+
 - Meta tracking: browser Pixel (`src/components/meta-pixel.tsx`, `src/lib/track.ts`, loaded from the footer) plus Conversions API from the server (`src/lib/meta.ts`, `/api/meta/event`). Browser and server copies share an event_id. Purchase is sent by the server when an order is marked paid (`markPaid` → `sendPurchase`, retried by the cron), using browser details saved at checkout in `order_tracking`. Skipped in PayFast sandbox unless `META_TEST_EVENT_CODE` is set. Visitors who decline the cookie notice (`nuve_consent=no`) are not tracked.
 
 ## Rules
