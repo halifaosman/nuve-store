@@ -11,12 +11,30 @@ type Rate = { service_name: string; total_price: number; description: string; mi
 const rand = (n: number) => 'R' + n.toLocaleString('en-ZA', { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 });
 const KEY = 'nuve-checkout';
 
+// Pickup points (lockers, Pargo, PAXI…) vs courier to the door. Door delivery is listed first.
+const PICKUP = /pargo|locker|bob ?box|click ?& ?collect|collect|pick ?up|paxi|pudo/i;
+const isPickup = (r: Rate) => PICKUP.test(r.service_name);
+const km = (r: Rate) => { const m = /approx\.?\s*([\d.,]+)\s*km/i.exec(r.service_name); return m ? parseFloat(m[1].replace(',', '.')) : 999; };
+const day = (v: string) => new Date(v).toLocaleDateString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short' });
+/** Plain-language line under a delivery option. */
+function blurb(r: Rate): { main: string; extra?: string } {
+  const when = r.min && r.max && day(r.min) !== day(r.max) ? `Arrives ${day(r.min)} – ${day(r.max)}` : r.max ? `Arrives by ${day(r.max)}` : '';
+  if (isPickup(r)) {
+    const [where, ...rest] = (r.description || '').split('|').map((x) => x.trim()).filter(Boolean);
+    return { main: [where, when].filter(Boolean).join(' · '), extra: rest.join(' · ') };
+  }
+  const generic = !r.description || /^default /i.test(r.description);
+  const what = /express/i.test(r.service_name) ? 'Faster courier to your door' : 'Courier to your door';
+  return { main: [generic ? what : r.description, when].filter(Boolean).join(' · ') };
+}
+
 export default function CheckoutForm({ bundles, initialPack, eftAvailable, eftMinutes }: { bundles: Bundle[]; initialPack: number; eftAvailable: boolean; eftMinutes: number }) {
   const [pack, setPack] = useState(bundles.some((b) => b.qty === initialPack) ? initialPack : bundles[0].qty);
   const [f, setF] = useState({ first: '', last: '', email: '', phone: '', company: '', street: '', suburb: '', city: '', province: '', postal: '' });
   const [rates, setRates] = useState<Rate[] | null>(null);
   const [rateErr, setRateErr] = useState('');
   const [ship, setShip] = useState('');
+  const [allPickups, setAllPickups] = useState(false);
   const [payment, setPayment] = useState<'payfast' | 'eft'>('payfast');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
@@ -41,7 +59,9 @@ export default function CheckoutForm({ bundles, initialPack, eftAvailable, eftMi
         const j = await r.json();
         if (!r.ok) { setRateErr(j.error || 'Could not load delivery options.'); setRates(null); return; }
         setRates(j.rates);
-        setShip((cur) => (j.rates.some((x: Rate) => x.service_name === cur) ? cur : j.rates[0]?.service_name || ''));
+        // Keep the shopper's choice if it's still offered; otherwise pick the cheapest door delivery.
+        const door = (j.rates as Rate[]).filter((x) => !isPickup(x)).sort((a, b) => a.total_price - b.total_price);
+        setShip((cur) => (j.rates.some((x: Rate) => x.service_name === cur) ? cur : (door[0] || j.rates[0])?.service_name || ''));
       } catch { setRateErr('Could not load delivery options. Check your connection.'); }
     }, 600);
     return () => clearTimeout(t);
@@ -61,7 +81,7 @@ export default function CheckoutForm({ bundles, initialPack, eftAvailable, eftMi
     track('AddPaymentInfo', { value: bundle.price + Number(rate.total_price || 0), content_ids: [PRODUCT], num_items: bundle.qty, payment_type: payment === 'eft' ? 'bank_transfer' : 'payfast' },
       { user: { email: f.email, phone: f.phone, first: f.first, last: f.last, city: f.city, province: f.province, postal: f.postal } });
     try {
-      const r = await fetch('/api/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...f, pack, shipping: ship, payment, pageUrl: location.href }) });
+      const r = await fetch('/api/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...f, pack, shipping: ship, shippingPrice: rate.total_price, payment, pageUrl: location.href }) });
       const j = await r.json();
       if (!r.ok) {
         setErr(j.error || 'Something went wrong. Please try again.');
@@ -115,15 +135,45 @@ export default function CheckoutForm({ bundles, initialPack, eftAvailable, eftMi
           {!addrReady && <p className="muted" style={{ margin: 0 }}>Enter your address to see delivery options and prices.</p>}
           {addrReady && !rates && !rateErr && <p className="muted" style={{ margin: 0 }}>Finding delivery options…</p>}
           {rateErr && <p className="err">{rateErr}</p>}
-          {rates?.map((r) => (
-            <label key={r.service_name} className={'opt' + (ship === r.service_name ? ' on' : '')}>
-              <span style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                <input type="radio" name="ship" checked={ship === r.service_name} onChange={() => setShip(r.service_name)} />
-                <span><b>{r.service_name}</b>{(r.description || r.max) && <span className="muted" style={{ display: 'block', fontSize: 13 }}>{r.description || `Arrives by ${new Date(r.max as string).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' })}`}</span>}</span>
-              </span>
-              <b>{rand(r.total_price)}</b>
-            </label>
-          ))}
+          {rates && (() => {
+            const door = rates.filter((r) => !isPickup(r)).sort((a, b) => a.total_price - b.total_price);
+            const pickups = rates.filter(isPickup).sort((a, b) => km(a) - km(b) || a.total_price - b.total_price);
+            // The 2 nearest, plus the cheapest if it isn't one of them.
+            const cheapest = [...pickups].sort((x, y) => x.total_price - y.total_price)[0];
+            const shown = allPickups ? pickups : pickups.slice(0, 2).concat(cheapest && !pickups.slice(0, 2).includes(cheapest) ? [cheapest] : []);
+            if (!allPickups && ship && !shown.some((r) => r.service_name === ship) && pickups.some((r) => r.service_name === ship)) shown.push(pickups.find((r) => r.service_name === ship)!);
+            const opt = (r: Rate) => {
+              const t = blurb(r);
+              return (
+                <label key={r.service_name} className={'opt' + (ship === r.service_name ? ' on' : '')}>
+                  <span style={{ display: 'flex', gap: 12, alignItems: 'center', minWidth: 0 }}>
+                    <input type="radio" name="ship" checked={ship === r.service_name} onChange={() => setShip(r.service_name)} />
+                    <span style={{ minWidth: 0 }}>
+                      <b>{r.service_name.replace(/\s*\(approx\.?\s*[\d.,]+\s*km\)/i, '')}</b>
+                      {isPickup(r) && km(r) < 999 && <span className="muted" style={{ fontSize: 13 }}> · {km(r)} km away</span>}
+                      {t.main && <span className="muted" style={{ display: 'block', fontSize: 13 }}>{t.main}</span>}
+                      {t.extra && ship === r.service_name && <span className="muted" style={{ display: 'block', fontSize: 12 }}>{t.extra}</span>}
+                    </span>
+                  </span>
+                  <b>{rand(r.total_price)}</b>
+                </label>
+              );
+            };
+            return (
+              <>
+                {door.map(opt)}
+                {pickups.length > 0 && (
+                  <>
+                    <p className="muted" style={{ margin: door.length ? '8px 0 0' : 0, fontSize: 14, fontWeight: 700 }}>{door.length ? 'Or collect from a pickup point near you' : 'Collect from a pickup point near you'}</p>
+                    {shown.map(opt)}
+                    {!allPickups && pickups.length > shown.length && (
+                      <button type="button" className="ghost" style={{ alignSelf: 'flex-start' }} onClick={() => setAllPickups(true)}>Show {pickups.length - shown.length} more pickup points</button>
+                    )}
+                  </>
+                )}
+              </>
+            );
+          })()}
         </div>
 
         <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

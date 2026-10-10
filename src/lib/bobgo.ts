@@ -57,7 +57,10 @@ export async function ratesAtCheckout(s: SiteSettings, to: DeliveryAddress, qty:
       order_total_price: orderTotal,
       handling_time: s.handlingDays,
     });
-    const rates = (out.rates || []).filter((r) => r && r.service_name && typeof r.total_price === 'number');
+    // Rounded up to whole rands: R87 reads better than R86,54, and the tiny moves between two Bob Go quotes
+    // (e.g. R86,54 on the page, R86,94 a minute later) no longer change the total the customer sees.
+    const rates = (out.rates || []).filter((r) => r && r.service_name && typeof r.total_price === 'number')
+      .map((r) => ({ ...r, total_price: Math.ceil(r.total_price - 0.001) }));
     return rates.length ? rates : fallback;
   } catch (e) {
     console.error('Bob Go rates failed', e);

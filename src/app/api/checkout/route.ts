@@ -31,7 +31,12 @@ export async function POST(req: NextRequest) {
 
   const unit = round2(bundle.price / bundle.qty);
   const items = [{ description: `Nuvé SnapBun (${bundle.label})`, sku: 'SNAPBUN-BLK', qty: bundle.qty, unit_price: unit, pack_price: bundle.price }];
-  const shipping = round2(Number(rate.total_price));
+  // Charge the delivery price the shopper saw, unless the fresh quote moved by more than R5 (then ask them to check).
+  const seen = Number(body.shippingPrice);
+  if (Number.isFinite(seen) && seen > 0 && Math.abs(seen - Number(rate.total_price)) > 5) {
+    return NextResponse.json({ error: `The delivery price changed to R${Math.round(Number(rate.total_price))}. Please check your total and tap Pay again.`, rates }, { status: 409 });
+  }
+  const shipping = round2(Number.isFinite(seen) && seen > 0 ? seen : Number(rate.total_price));
   const total = round2(bundle.price + shipping);
 
   const id = crypto.randomUUID();
