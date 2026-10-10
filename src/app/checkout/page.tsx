@@ -15,7 +15,7 @@ export default async function Checkout({ searchParams }: { searchParams: { pack?
       <main className="page">
         <h1 className="h2" style={{ marginBottom: 6 }}>Checkout</h1>
         {searchParams.cancelled && <p className="err" style={{ marginBottom: 12 }}>Your card payment was cancelled. Your details are below if you&apos;d like to try again.</p>}
-        <CheckoutForm bundles={s.bundles} initialPack={pack} eftAvailable={bankReady(s)} eftMinutes={s.eftMinutes} />
+        <CheckoutForm bundles={s.bundles} initialPack={pack} eftAvailable={bankReady(s)} eftMinutes={s.eftMinutes} freeFrom={s.freeShipMinQty || 0} />
       </main>
       <Footer />
     </>

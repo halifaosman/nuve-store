@@ -3,17 +3,18 @@ import { useEffect, useRef, useState } from 'react';
 import type { Bundle } from '@/lib/settings';
 import { track } from '@/lib/track';
 import { useWhenTracking } from '@/components/meta-pixel';
+import { isPickupName } from '@/lib/free-delivery';
 
 const PRODUCT = 'SNAPBUN-BLK';
 
 const PROVINCES = ['Eastern Cape', 'Free State', 'Gauteng', 'KwaZulu-Natal', 'Limpopo', 'Mpumalanga', 'North West', 'Northern Cape', 'Western Cape'];
 type Rate = { service_name: string; total_price: number; description: string; min: string | null; max: string | null };
 const rand = (n: number) => 'R' + n.toLocaleString('en-ZA', { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 });
+const fee = (n: number) => (n > 0 ? rand(n) : 'FREE');
 const KEY = 'nuve-checkout';
 
 // Pickup points (lockers, Pargo, PAXI…) vs courier to the door. Door delivery is listed first.
-const PICKUP = /pargo|locker|bob ?box|click ?& ?collect|collect|pick ?up|paxi|pudo/i;
-const isPickup = (r: Rate) => PICKUP.test(r.service_name);
+const isPickup = (r: Rate) => isPickupName(r.service_name);
 const km = (r: Rate) => { const m = /approx\.?\s*([\d.,]+)\s*km/i.exec(r.service_name); return m ? parseFloat(m[1].replace(',', '.')) : 999; };
 const day = (v: string) => new Date(v).toLocaleDateString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short' });
 /** Plain-language line under a delivery option. */
@@ -28,13 +29,14 @@ function blurb(r: Rate): { main: string; extra?: string } {
   return { main: [generic ? what : r.description, when].filter(Boolean).join(' · ') };
 }
 
-export default function CheckoutForm({ bundles, initialPack, eftAvailable, eftMinutes }: { bundles: Bundle[]; initialPack: number; eftAvailable: boolean; eftMinutes: number }) {
+export default function CheckoutForm({ bundles, initialPack, eftAvailable, eftMinutes, freeFrom = 0 }: { bundles: Bundle[]; initialPack: number; eftAvailable: boolean; eftMinutes: number; freeFrom?: number }) {
   const [pack, setPack] = useState(bundles.some((b) => b.qty === initialPack) ? initialPack : bundles[0].qty);
   const [f, setF] = useState({ first: '', last: '', email: '', phone: '', company: '', street: '', suburb: '', city: '', province: '', postal: '' });
   const [rates, setRates] = useState<Rate[] | null>(null);
   const [rateErr, setRateErr] = useState('');
   const [ship, setShip] = useState('');
   const [allPickups, setAllPickups] = useState(false);
+  const free = freeFrom > 0 && pack >= freeFrom;
   const [payment, setPayment] = useState<'payfast' | 'eft'>('payfast');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
@@ -132,6 +134,7 @@ export default function CheckoutForm({ bundles, initialPack, eftAvailable, eftMi
 
         <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <b>Delivery</b>
+          {free && <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'var(--ok)' }}>Your delivery is free. Faster or pickup options cost only the difference.</p>}
           {!addrReady && <p className="muted" style={{ margin: 0 }}>Enter your address to see delivery options and prices.</p>}
           {addrReady && !rates && !rateErr && <p className="muted" style={{ margin: 0 }}>Finding delivery options…</p>}
           {rateErr && <p className="err">{rateErr}</p>}
@@ -155,7 +158,7 @@ export default function CheckoutForm({ bundles, initialPack, eftAvailable, eftMi
                       {t.extra && ship === r.service_name && <span className="muted" style={{ display: 'block', fontSize: 12 }}>{t.extra}</span>}
                     </span>
                   </span>
-                  <b>{rand(r.total_price)}</b>
+                  <b style={r.total_price === 0 ? { color: 'var(--ok)' } : undefined}>{free && r.total_price > 0 ? `+${rand(r.total_price)}` : fee(r.total_price)}</b>
                 </label>
               );
             };
@@ -202,7 +205,16 @@ export default function CheckoutForm({ bundles, initialPack, eftAvailable, eftMi
             {bundles.map((b) => <option key={b.qty} value={b.qty}>{b.label} — {rand(b.price)}</option>)}
           </select></div>
         <div className="sumline"><span>{bundle.label}</span><span>{rand(bundle.price)}</span></div>
-        <div className="sumline"><span>Delivery</span><span>{rate ? rand(rate.total_price) : '—'}</span></div>
+        <div className="sumline"><span>Delivery</span><span style={rate && rate.total_price === 0 ? { color: 'var(--ok)', fontWeight: 800 } : undefined}>{rate ? fee(rate.total_price) : '—'}</span></div>
+        {freeFrom > 0 && pack < freeFrom && bundles.some((b) => b.qty >= freeFrom) && (() => {
+          const up = bundles.filter((b) => b.qty >= freeFrom).sort((a, b) => a.qty - b.qty)[0];
+          return (
+            <button type="button" className="upsell" onClick={() => setPack(up.qty)}>
+              <b>Get free delivery</b>
+              <span>Switch to {up.label} for {rand(up.price)} and delivery is free.</span>
+            </button>
+          );
+        })()}
         <div className="sumline total"><span>Total</span><span>{rand(total)}</span></div>
         {err && <p className="err" role="alert">{err}</p>}
         <button className="btn" type="submit" disabled={busy || !rate} style={{ width: '100%' }}>

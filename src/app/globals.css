@@ -341,3 +341,11 @@ footer a{color:#F2E7E1}
 
 /* Store page: no long-press "Save image" on phones, no dragging photos/videos off the page (see components/protect.tsx) */
 .protect img,.protect video{-webkit-touch-callout:none;-webkit-user-drag:none;user-select:none}
+
+/* Checkout: "get free delivery" nudge for single packs */
+.upsell{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:2px;padding:12px 14px;border:1.5px dashed var(--ok);border-radius:14px;background:#F1F8F4;font-size:14px}
+.upsell b{color:var(--ok)}
+.upsell span{color:var(--muted)}
+.upsell:focus-visible{outline:3px solid var(--berry);outline-offset:2px}
+/* Store: free delivery note on packs */
+.freeship{display:inline-block;font-size:11px;font-weight:800;color:var(--ok);background:#E7F3EC;border-radius:999px;padding:2px 8px;margin-top:3px}

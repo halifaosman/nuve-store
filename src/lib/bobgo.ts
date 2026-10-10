@@ -1,8 +1,9 @@
+import { applyFreeDelivery, freeDelivery } from './free-delivery';
 import crypto from 'node:crypto';
 import { env } from './env';
 import type { SiteSettings } from './settings';
 
-export type Rate = { service_name: string; total_price: number; description: string; min_delivery_date?: string; max_delivery_date?: string };
+export type Rate = { service_name: string; total_price: number; description: string; min_delivery_date?: string; max_delivery_date?: string; full_price?: number };
 export type DeliveryAddress = { street: string; suburb: string; city: string; province: string; postal: string; company?: string };
 
 function base(): string {
@@ -44,6 +45,11 @@ function addr(a: DeliveryAddress) {
 }
 
 export async function ratesAtCheckout(s: SiteSettings, to: DeliveryAddress, qty: number, orderTotal: number): Promise<Rate[]> {
+  const rates = await quoteRates(s, to, qty, orderTotal);
+  return freeDelivery(s, qty) ? applyFreeDelivery(rates) : rates;
+}
+
+async function quoteRates(s: SiteSettings, to: DeliveryAddress, qty: number, orderTotal: number): Promise<Rate[]> {
   const fallback: Rate[] = [{ service_name: s.fallbackShippingName, total_price: s.fallbackShippingPrice, description: '' }];
   if (!bobgoConfigured() || !s.collection.street_address) return fallback;
   try {

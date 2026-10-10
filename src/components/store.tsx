@@ -68,7 +68,7 @@ export function Gallery({ images, saveBadge }: { images: GalleryImage[]; saveBad
   );
 }
 
-export function BuyBox({ bundles }: { bundles: Bundle[] }) {
+export function BuyBox({ bundles, freeFrom = 0 }: { bundles: Bundle[]; freeFrom?: number }) {
   const [qty, setQty] = useState(bundles.find((b) => b.tag === 'MOST POPULAR')?.qty ?? bundles[0].qty);
   const sel = bundles.find((b) => b.qty === qty) || bundles[0];
   const save = sel.compare ? Math.round((1 - sel.price / sel.compare) * 100) : 0;
@@ -87,6 +87,7 @@ export function BuyBox({ bundles }: { bundles: Bundle[] }) {
               <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <b>{b.label}</b>
                 <span style={{ fontSize: 13, color: 'var(--muted)', fontWeight: 600 }}>{b.sub}</span>
+                {freeFrom > 0 && b.qty >= freeFrom && <span className="freeship">FREE DELIVERY</span>}
               </span>
             </span>
             <span className="r">
@@ -98,6 +99,9 @@ export function BuyBox({ bundles }: { bundles: Bundle[] }) {
         ))}
       </div>
       <a className="btn" href={`/checkout?pack=${sel.qty}`} onClick={() => track('AddToCart', { value: sel.price, content_ids: [PRODUCT], contents: [{ id: PRODUCT, quantity: sel.qty }], num_items: sel.qty })} style={{ width: '100%', minHeight: 62, fontSize: 17 }}>BUY NOW — {rand(sel.price)}</a>
+      {freeFrom > 0 && <p style={{ margin: '-4px 0 0', textAlign: 'center', fontSize: 14, fontWeight: 700, color: sel.qty >= freeFrom ? 'var(--ok)' : 'var(--muted)' }}>
+        {sel.qty >= freeFrom ? '✓ Free delivery anywhere in South Africa' : `Free delivery when you buy ${freeFrom} or more`}
+      </p>}
     </>
   );
 }

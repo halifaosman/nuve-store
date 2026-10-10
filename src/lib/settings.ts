@@ -1,4 +1,4 @@
-import { one } from './db';
+import { exec, one } from './db';
 
 export type Bundle = { qty: number; label: string; sub: string; price: number; compare: number; tag: string };
 export type Address = { company: string; street_address: string; local_area: string; city: string; zone: string; code: string };
@@ -60,6 +60,7 @@ export type SiteSettings = {
   readyDaysMax: number;
   deliverDaysMin: number;
   deliverDaysMax: number;
+  freeShipMinQty: number; // free delivery from this pack size (0 = off)
 };
 
 export const DEFAULT_SETTINGS: SiteSettings = {
@@ -69,8 +70,8 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     'The Nuvé SnapBun is a bendable bun shaper wrapped in soft synthetic fibre. Roll your hair up, snap it shut, and you have a full, salon-sleek bun in about 5 seconds. No bobby pins, no tutorials, no bun that collapses by lunch.',
   bundles: [
     { qty: 1, label: '1 SnapBun', sub: 'Try it out', price: 195, compare: 299, tag: '' },
-    { qty: 2, label: '2 SnapBuns', sub: 'One for home, one for your bag', price: 350, compare: 598, tag: 'MOST POPULAR' },
-    { qty: 3, label: '3 SnapBuns', sub: 'Share with your sister or daughter', price: 475, compare: 897, tag: 'BEST VALUE' },
+    { qty: 2, label: '2 SnapBuns', sub: 'One for home, one for your bag', price: 459, compare: 598, tag: 'MOST POPULAR' },
+    { qty: 3, label: '3 SnapBuns', sub: 'Share with your sister or daughter', price: 589, compare: 897, tag: 'BEST VALUE' },
   ],
   trustCount: '',
   trustTitle: '',
@@ -122,11 +123,37 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   readyDaysMax: 2,
   deliverDaysMin: 4,
   deliverDaysMax: 8,
+  freeShipMinQty: 2,
 };
+
+/** Free-delivery buffer added to packs that get free delivery when the feature is first switched on. */
+export const FREE_DELIVERY_BUFFER = 109;
+/** Round up to a price ending in 9: 459, 589. */
+export const priceEnding9 = (n: number) => Math.ceil((n + 1) / 10) * 10 - 1;
+
+/**
+ * One-time upgrade (Oct 2026): stores saved before free delivery existed get free delivery on 2+ packs,
+ * with the delivery cost built into those pack prices (e.g. R350 -> R459, R475 -> R589) so no order runs at a loss.
+ * Runs once: afterwards freeShipMinQty is saved, and the owner can change both in Store settings.
+ */
+async function upgradeForFreeDelivery(saved: Partial<SiteSettings>): Promise<Partial<SiteSettings>> {
+  if (saved.freeShipMinQty !== undefined || !Array.isArray(saved.bundles) || !saved.bundles.length) return saved;
+  const bundles = saved.bundles.map((b) => (b.qty >= 2 ? { ...b, price: priceEnding9(Number(b.price) + FREE_DELIVERY_BUFFER) } : b));
+  const next = { ...saved, bundles, freeShipMinQty: 2 };
+  const changed = await exec(
+    "UPDATE settings SET value = ?, updated_at = UTC_TIMESTAMP(3) WHERE `key` = 'site' AND JSON_EXTRACT(value, '$.freeShipMinQty') IS NULL",
+    [JSON.stringify(next)]).catch(() => 0);
+  if (!changed) {
+    const again = await one<{ value: Partial<SiteSettings> }>("SELECT value FROM settings WHERE `key` = 'site'");
+    return (again?.value || saved) as Partial<SiteSettings>;
+  }
+  console.log('Free delivery switched on for 2+ packs; prices now', bundles.map((b) => `${b.qty}: R${b.price}`).join(', '));
+  return next;
+}
 
 export async function getSettings(): Promise<SiteSettings> {
   const data = await one<{ value: Partial<SiteSettings> }>("SELECT value FROM settings WHERE `key` = 'site'");
-  const saved = (data?.value || {}) as Partial<SiteSettings>;
+  const saved = await upgradeForFreeDelivery((data?.value || {}) as Partial<SiteSettings>);
   const out: SiteSettings = { ...DEFAULT_SETTINGS };
   for (const k of Object.keys(saved) as (keyof SiteSettings)[]) {
     const v = saved[k];

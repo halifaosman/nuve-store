@@ -93,7 +93,7 @@ export default async function Home() {
                   <li key={b}><span className="tick">✓</span>{b}</li>
                 ))}
               </ul>
-              <BuyBox bundles={s.bundles} />
+              <BuyBox bundles={s.bundles} freeFrom={s.freeShipMinQty || 0} />
               <TrackViewContent value={(s.bundles.find((b) => b.tag === 'MOST POPULAR') || s.bundles[0]).price} />
               {trustTitle && (
                 <div className="trust">

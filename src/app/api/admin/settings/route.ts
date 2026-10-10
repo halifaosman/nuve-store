@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { exec, now } from '@/lib/db';
+import { exec, now, rows } from '@/lib/db';
 import { DEFAULT_SETTINGS, getSettings, SiteSettings } from '@/lib/settings';
 import { env } from '@/lib/env';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
+  // Typical courier cost, from real orders: what customers paid before free delivery, or the quote logged on free-delivery orders.
+  const costs = await rows<{ v: number }>(
+    `SELECT CAST(REGEXP_SUBSTR(message, '[0-9]+') AS UNSIGNED) AS v FROM order_events WHERE kind = 'delivery' AND created_at > UTC_TIMESTAMP() - INTERVAL 90 DAY
+     UNION ALL SELECT shipping_cost AS v FROM orders WHERE paid_at IS NOT NULL AND shipping_cost > 0 AND created_at > UTC_TIMESTAMP() - INTERVAL 90 DAY`).catch(() => []);
+  const vals = costs.map((c) => Number(c.v)).filter((v) => v > 20 && v < 400);
+  const deliveryAvg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
   return NextResponse.json({
     settings: await getSettings(),
     defaults: DEFAULT_SETTINGS,
@@ -28,6 +34,7 @@ export async function GET() {
       })(),
       bobgoSandbox: env.bobgoSandbox(),
       bobgoKey: !!env.bobgoKey(),
+      deliveryAvg,
       bobgoWebhookSecret: !!env.bobgoWebhookSecret(),
       meta: { pixelId: env.metaPixelId(), token: !!env.metaToken(), testCode: env.metaTestCode() },
     },

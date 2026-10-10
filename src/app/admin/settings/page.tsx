@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import type { SiteSettings, Bundle } from '@/lib/settings';
 import { AdminShell, api } from '../ui';
 
-type Status = { siteUrl: string; meta?: { pixelId: string; token: boolean; testCode: string }; payfastSandbox: boolean; payfast?: { merchantId: string; keyHint: string; passphraseLength: number; hadSpaces: string[]; publicSandbox: boolean }; bobgoSandbox: boolean; bobgoKey: boolean; bobgoWebhookSecret: boolean };
+type Status = { siteUrl: string; meta?: { pixelId: string; token: boolean; testCode: string }; payfastSandbox: boolean; payfast?: { merchantId: string; keyHint: string; passphraseLength: number; hadSpaces: string[]; publicSandbox: boolean }; bobgoSandbox: boolean; bobgoKey: boolean; bobgoWebhookSecret: boolean; deliveryAvg?: number };
 const PROVINCES = ['Eastern Cape', 'Free State', 'Gauteng', 'KwaZulu-Natal', 'Limpopo', 'Mpumalanga', 'North West', 'Northern Cape', 'Western Cape'];
 
 const TEXT: [keyof SiteSettings, string, boolean?][] = [
@@ -63,6 +63,7 @@ export default function Settings() {
   if (!s) return <AdminShell title="Store settings">{err ? <p className="err">{err}</p> : <p className="muted">Loading…</p>}</AdminShell>;
 
   const set = (k: keyof SiteSettings, v: unknown) => setS({ ...s, [k]: v } as SiteSettings);
+  const typicalDelivery = Math.max(60, Math.round(st?.deliveryAvg || 100));
   const setB = (i: number, k: keyof Bundle, v: string) => { const b = s.bundles.map((x, j) => (j === i ? { ...x, [k]: ['qty', 'price', 'compare'].includes(k) ? Number(v) : v } : x)); set('bundles', b); };
   const setC = (k: keyof SiteSettings['collection'], v: string) => set('collection', { ...s.collection, [k]: v });
 
@@ -122,6 +123,22 @@ export default function Settings() {
             </div>
           ))}
           <p className="muted" style={{ margin: 0, fontSize: 13 }}>Only show a &ldquo;Was&rdquo; price you have genuinely charged. Leave it 0 to hide it.</p>
+          <div className="row2" style={{ alignItems: 'end' }}>
+            <div className="f"><label htmlFor="fsq">Free delivery from (packs)</label>
+              <select id="fsq" value={s.freeShipMinQty || 0} onChange={(e) => set('freeShipMinQty', Number(e.target.value))}>
+                <option value={0}>Off: customers pay delivery</option>
+                {s.bundles.map((b) => <option key={b.qty} value={b.qty}>{b.qty === 1 ? 'Every order' : `${b.qty} or more SnapBuns`}</option>)}
+              </select></div>
+            <p className="muted" style={{ margin: 0, fontSize: 13 }}>The cheapest courier-to-door option becomes free; express and pickup points cost only the difference. You still pay Bob Go the courier cost.</p>
+          </div>
+          {(s.freeShipMinQty || 0) > 0 && (
+            <div style={{ background: 'var(--blush)', borderRadius: 12, padding: '10px 14px', fontSize: 14 }}>
+              <b>What you keep after paying the courier</b> (typical door delivery about R{typicalDelivery}):
+              {s.bundles.filter((b) => b.qty >= s.freeShipMinQty).map((b) => (
+                <div key={b.qty}>{b.label}: R{b.price} − R{typicalDelivery} = <b>R{b.price - typicalDelivery}</b> ({Math.round((b.price - typicalDelivery) / b.qty)} per SnapBun)</div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="card" style={card}>

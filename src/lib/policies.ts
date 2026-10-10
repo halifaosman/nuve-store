@@ -115,7 +115,7 @@ ${b.details}
 
 ## Products and prices
 - All prices are in South African Rand (ZAR)${s.bizVatNo ? ' and include VAT' : ''}.
-- Delivery fees are calculated at checkout from your delivery address and shown before you pay.
+- ${s.freeShipMinQty > 0 ? `Delivery to your door is free on orders of ${s.freeShipMinQty} or more SnapBuns. Other delivery fees` : 'Delivery fees'} are calculated at checkout from your delivery address and shown before you pay.
 - We take care to show products and prices accurately. If we make an obvious pricing error, we will contact you before sending your order and you may cancel it for a full refund.
 - Product photos are for illustration. Shades may look slightly different on different screens.
 
@@ -165,7 +165,7 @@ export function shippingTemplate(s: SiteSettings): string {
 We deliver to addresses across South Africa. We do not ship outside South Africa at the moment.
 
 ## Delivery fees
-Delivery is calculated at checkout from your address, using our courier partners through Bob Go. You will see the exact delivery fee, and choose the delivery option, before you pay.
+${s.freeShipMinQty > 0 ? `Standard delivery to your door is free on orders of ${s.freeShipMinQty} or more SnapBuns. Faster delivery or collection from a pickup point costs only the difference. ` : ''}Delivery is calculated at checkout from your address, using our courier partners through Bob Go. You will see the exact delivery fee, and choose the delivery option, before you pay.
 
 ## Delivery times
 - Dispatch: orders are packed and handed to the courier within ${d.dispatch} business days of payment confirmation.

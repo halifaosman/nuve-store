@@ -33,10 +33,10 @@ export async function POST(req: NextRequest) {
   const items = [{ description: `Nuvé SnapBun (${bundle.label})`, sku: 'SNAPBUN-BLK', qty: bundle.qty, unit_price: unit, pack_price: bundle.price }];
   // Charge the delivery price the shopper saw, unless the fresh quote moved by more than R5 (then ask them to check).
   const seen = Number(body.shippingPrice);
-  if (Number.isFinite(seen) && seen > 0 && Math.abs(seen - Number(rate.total_price)) > 5) {
+  if (Number.isFinite(seen) && seen >= 0 && Math.abs(seen - Number(rate.total_price)) > 5) {
     return NextResponse.json({ error: `The delivery price changed to R${Math.round(Number(rate.total_price))}. Please check your total and tap Pay again.`, rates }, { status: 409 });
   }
-  const shipping = round2(Number.isFinite(seen) && seen > 0 ? seen : Number(rate.total_price));
+  const shipping = round2(Number.isFinite(seen) && seen >= 0 && body.shippingPrice !== undefined && body.shippingPrice !== null && body.shippingPrice !== '' ? seen : Number(rate.total_price));
   const total = round2(bundle.price + shipping);
 
   const id = crypto.randomUUID();
@@ -67,6 +67,7 @@ export async function POST(req: NextRequest) {
     source_url: String(body.pageUrl || '').slice(0, 500) || null, consent: declined(req) ? 'no' : 'yes',
   }).catch((e) => console.warn('order_tracking insert failed', e));
   await logEvent(order.id, 'created', `Order placed (${method === 'eft' ? 'bank transfer' : 'PayFast'}), total R${total.toFixed(2)}`);
+  if (rate.full_price !== undefined && rate.full_price > shipping) await logEvent(order.id, 'delivery', `Free delivery: the courier quote was about R${Math.round(rate.full_price)}, customer paid R${shipping.toFixed(0)}`);
 
   if (method === 'eft') {
     void orderEmails(order.id); // bank details by email
