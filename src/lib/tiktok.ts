@@ -55,14 +55,14 @@ export type TtEvent = {
 };
 
 /** Sends events to TikTok. Never throws: tracking must not break checkout. Returns a short result for logs. */
-export async function sendTikTok(events: TtEvent[]): Promise<string> {
+export async function sendTikTok(events: TtEvent[], opts: { live?: boolean } = {}): Promise<string> {
   if (!tiktokEnabled() || !events.length) return 'not configured';
   const body: Record<string, unknown> = {
     event_source: 'web',
     event_source_id: env.tiktokPixelId(),
     data: events.map((e) => ({ event_time: e.event_time || Math.floor(Date.now() / 1000), ...e })),
   };
-  const test = env.tiktokTestCode();
+  const test = opts.live ? '' : env.tiktokTestCode(); // live: skip the test code so TikTok counts it as a real event
   if (test) body.test_event_code = test;
   try {
     const r = await fetch(`${API}/event/track/`, {

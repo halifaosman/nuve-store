@@ -26,6 +26,34 @@ function MetaTest({ to = 'meta' }: { to?: 'meta' | 'tiktok' }) {
   );
 }
 
+// Fires one real InitiateCheckout + CompletePayment so they can be picked as a TikTok campaign goal.
+function TikTokActivate() {
+  const [step, setStep] = useState<'idle' | 'sure' | 'busy'>('idle');
+  const [res, setRes] = useState<{ ok: boolean; result: string; hint?: string } | null>(null);
+  const send = async () => {
+    setStep('busy');
+    try { setRes(await api('/api/admin/tiktok-test', { method: 'POST', json: { kind: 'activate' } })); }
+    catch (e) { setRes({ ok: false, result: (e as Error).message }); }
+    setStep('idle');
+  };
+  return (
+    <div style={{ paddingLeft: 18, marginTop: 6, display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {step === 'sure' ? (
+        <div style={{ fontSize: 14 }}>
+          This sends one real checkout and one real R195 sale to TikTok (no order is made, nothing ships). TikTok will report one extra sale.{' '}
+          <button type="button" className="ghost" style={{ color: 'var(--ink)' }} onClick={send}>Send them</button>{' '}
+          <button type="button" className="ghost" style={{ color: 'var(--ink)' }} onClick={() => setStep('idle')}>Cancel</button>
+        </div>
+      ) : (
+        <button type="button" className="ghost" style={{ alignSelf: 'flex-start', color: 'var(--ink)' }} disabled={step === 'busy'} onClick={() => setStep('sure')}>
+          {step === 'busy' ? 'Sending…' : 'Activate checkout and purchase events for TikTok campaigns'}
+        </button>
+      )}
+      {res && <div style={{ fontSize: 14 }}><Dot ok={res.ok} />{res.result}{res.hint && <div className="muted">{res.hint}</div>}</div>}
+    </div>
+  );
+}
+
 function PayfastTest() {
   const [busy, setBusy] = useState(false);
   const [res, setRes] = useState<{ mode: string; merchantId: string; tries: { label: string; ok: boolean; detail: string }[]; verdict: string } | null>(null);
@@ -108,7 +136,7 @@ export default function Settings() {
           {st.tiktok && (
             <div>
               <Dot ok={!!(st.tiktok.pixelId && st.tiktok.token)} />TikTok tracking: {st.tiktok.pixelId ? <>Pixel <b>{st.tiktok.pixelId}</b> in the browser</> : 'Pixel ID not set'}{st.tiktok.token ? ' + Events API from the server' : st.tiktok.pixelId ? ', Events API access token not set' : ''}{st.tiktok.testCode && <> · test code <b>{st.tiktok.testCode}</b> (remove when done testing)</>}
-              {st.tiktok.pixelId && st.tiktok.token && <MetaTest to="tiktok" />}
+              {st.tiktok.pixelId && st.tiktok.token && <><MetaTest to="tiktok" /><TikTokActivate /></>}
               {(!st.tiktok.pixelId || !st.tiktok.token) && <div className="muted" style={{ fontSize: 14, paddingLeft: 18 }}>Add them under <a href="/admin/server">Server settings</a>.</div>}
             </div>
           )}
