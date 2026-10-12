@@ -15,6 +15,9 @@ export const EDITABLE: EnvField[] = [
   { group: 'Meta (Facebook) tracking', key: 'META_PIXEL_ID', label: 'Pixel ID', secret: false, kind: 'text', help: 'Events Manager → Data sources → your pixel. Numbers only.' },
   { group: 'Meta (Facebook) tracking', key: 'META_CAPI_TOKEN', label: 'Conversions API access token', secret: true, kind: 'text', help: 'Events Manager → your pixel → Settings → Conversions API → Generate access token.' },
   { group: 'Meta (Facebook) tracking', key: 'META_TEST_EVENT_CODE', label: 'Test event code (optional)', secret: false, kind: 'text', help: 'From Events Manager → Test events, e.g. TEST12345. Server events then show up there. Clear it when you are done testing.' },
+  { group: 'TikTok tracking', key: 'TIKTOK_PIXEL_ID', label: 'Pixel ID', secret: false, kind: 'text', help: "TikTok Ads Manager → Tools → Events → your pixel. Capital letters and numbers, e.g. the code inside ttq.load('…')." },
+  { group: 'TikTok tracking', key: 'TIKTOK_ACCESS_TOKEN', label: 'Events API access token', secret: true, kind: 'text', help: 'TikTok Events Manager → your pixel → Settings → Events API → Generate access token.' },
+  { group: 'TikTok tracking', key: 'TIKTOK_TEST_EVENT_CODE', label: 'Test event code (optional)', secret: false, kind: 'text', help: 'From TikTok Events Manager → your pixel → Test events, e.g. TEST12345. Server events then show up there. Clear it when you are done testing.' },
   { group: 'Email (Resend)', key: 'RESEND_API_KEY', label: 'Resend API key', secret: true, kind: 'text', help: 'resend.com → API Keys → Create API key (Sending access). Starts with re_.' },
   { group: 'Email (Resend)', key: 'EMAIL_FROM', label: 'Send emails from', secret: false, kind: 'text', help: 'e.g. Nuvé <hello@nuve.andriettasmith.org>. The domain must be verified in Resend. Replies go to the customer service email in Policies & contact.' },
   { group: 'Facebook Page replies', key: 'META_PAGE_ID', label: 'Page ID', secret: false, kind: 'text', help: 'Numbers only. For your Page it is 61587599011799 (from facebook.com/profile.php?id=…).' },
@@ -53,6 +56,8 @@ export function checkValue(f: EnvField, v: string): string {
   if (f.key === 'RESEND_API_KEY' && v && !/^re_[A-Za-z0-9_]{10,}$/.test(v)) return 'Resend API key: it starts with re_ and has no spaces.';
   if (f.key === 'EMAIL_FROM' && v && !/^([^<>@]{1,60}<)?[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+>?$/.test(v)) return 'Send emails from: use the form Nuvé <hello@your-domain>.';
   if (f.key === 'META_PAGE_ID' && v && !/^\d{5,25}$/.test(v)) return 'Page ID: numbers only.';
+  if (f.key === 'TIKTOK_PIXEL_ID' && v && !/^[A-Z0-9]{15,25}$/.test(v)) return 'TikTok Pixel ID: capital letters and numbers only, e.g. DB6JB4BC77UD59ISI4QG.';
+  if (f.key === 'TIKTOK_TEST_EVENT_CODE' && v && !/^[A-Za-z0-9]{3,30}$/.test(v)) return 'TikTok test event code: letters and numbers only, e.g. TEST12345.';
   if (f.key === 'META_TEST_EVENT_CODE' && v && !/^[A-Za-z0-9]{3,30}$/.test(v)) return 'Test event code: letters and numbers only, e.g. TEST12345.';
   return '';
 }

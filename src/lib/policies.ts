@@ -86,9 +86,9 @@ We keep order and payment records for 5 years, as South African tax law requires
 Our website uses encryption (HTTPS). Access to customer information is limited to the people who need it to run the store, and proofs of payment can only be viewed by our team.
 
 ## Cookies and ad measurement
-We use cookies that the website needs to work, and the Meta Pixel and Meta Conversions API to see which of our adverts lead to visits and sales. These set cookies called _fbp and _fbc and send Meta details of the pages you view, items you choose and purchases you make, plus your contact details in scrambled (hashed) form.
+We use cookies that the website needs to work, and the Meta Pixel and Conversions API and the TikTok Pixel and Events API to see which of our adverts lead to visits and sales. These set cookies (such as _fbp, _fbc and _ttp) and send Meta and TikTok details of the pages you view, items you choose and purchases you make, plus your contact details in scrambled (hashed) form.
 
-When you first visit, a notice lets you say no. If you do, we stop sending this information to Meta from your browser and from our server. You can change your mind by clearing your cookies for our website. You can also control the adverts you see in your Facebook and Instagram ad settings.
+When you first visit, a notice lets you say no. If you do, we stop sending this information to Meta and TikTok from your browser and from our server. You can change your mind by clearing your cookies for our website. You can also control the adverts you see in your Facebook, Instagram and TikTok ad settings.
 
 ## Your rights
 Under POPIA you may:

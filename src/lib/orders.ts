@@ -2,6 +2,7 @@ import { exec, insert, one, rows, tx, now } from './db';
 import { createBobGoOrder, findBobGoOrderId, bobgoConfigured, channelOrderNumber, OrderRow } from './bobgo';
 import { getSettings } from './settings';
 import { sendPurchase } from './meta';
+import { sendTikTokPurchase } from './tiktok';
 import { orderEmails } from './email';
 
 export const STATUS_LABEL: Record<string, string> = {
@@ -67,6 +68,7 @@ export async function markPaid(orderId: string, how: string, extra: { pf_payment
   }
   await logEvent(orderId, 'paid', `Payment confirmed (${how})`);
   void sendPurchase(orderId).catch((e) => console.warn('Meta purchase failed', e)); // ad tracking; never blocks fulfilment
+  void sendTikTokPurchase(orderId).catch((e) => console.warn('TikTok purchase failed', e));
   void orderEmails(orderId); // confirmation to the customer + new-order alert to the shop
   return sendToBobGo(orderId);
 }
@@ -121,6 +123,15 @@ export async function retryMetaPurchases(limit = 10) {
       WHERE t.purchase_sent_at IS NULL AND t.consent <> 'no' AND o.paid_at IS NOT NULL
         AND o.paid_at > UTC_TIMESTAMP(3) - INTERVAL 6 DAY ORDER BY o.paid_at LIMIT ?`, [limit]).catch(() => []);
   for (const r of due) await sendPurchase(r.order_id).catch(() => {});
+}
+
+// Same for TikTok (CompletePayment). TikTok accepts events up to 7 days old too.
+export async function retryTikTokPurchases(limit = 10) {
+  const due = await rows<{ order_id: string }>(
+    `SELECT k.order_id FROM tiktok_tracking k JOIN order_tracking t ON t.order_id = k.order_id JOIN orders o ON o.id = k.order_id
+      WHERE k.purchase_sent_at IS NULL AND t.consent <> 'no' AND o.paid_at IS NOT NULL
+        AND o.paid_at > UTC_TIMESTAMP(3) - INTERVAL 6 DAY ORDER BY o.paid_at LIMIT ?`, [limit]).catch(() => []);
+  for (const r of due) await sendTikTokPurchase(r.order_id).catch(() => {});
 }
 
 // Paid orders that never reached Bob Go (e.g. Bob Go was down). Called by the cron and when the admin opens.

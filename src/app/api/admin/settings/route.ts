@@ -37,6 +37,7 @@ export async function GET() {
       deliveryAvg,
       bobgoWebhookSecret: !!env.bobgoWebhookSecret(),
       meta: { pixelId: env.metaPixelId(), token: !!env.metaToken(), testCode: env.metaTestCode() },
+      tiktok: { pixelId: env.tiktokPixelId(), token: !!env.tiktokToken(), testCode: env.tiktokTestCode() },
     },
   });
 }

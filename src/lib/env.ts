@@ -42,6 +42,9 @@ export const env = {
   metaPixelId: () => (process.env.META_PIXEL_ID || '').trim(),
   metaToken: () => (process.env.META_CAPI_TOKEN || '').trim(),
   metaTestCode: () => (process.env.META_TEST_EVENT_CODE || '').trim(),
+  tiktokPixelId: () => (process.env.TIKTOK_PIXEL_ID || '').trim(),
+  tiktokToken: () => (process.env.TIKTOK_ACCESS_TOKEN || '').trim(),
+  tiktokTestCode: () => (process.env.TIKTOK_TEST_EVENT_CODE || '').trim(),
   // Order emails through Resend (src/lib/email.ts)
   resendKey: () => (process.env.RESEND_API_KEY || '').trim(),
   emailFrom: () => (process.env.EMAIL_FROM || '').trim() || 'Nuvé <hello@nuve.andriettasmith.org>',

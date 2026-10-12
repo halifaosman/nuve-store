@@ -55,7 +55,7 @@ export default function Policies() {
 
         <div className="card" style={card}>
           <b>Cookie notice (Meta ad tracking)</b>
-          <p className="muted" style={{ margin: 0, fontSize: 14 }}>Shown at the bottom of the store when the Meta Pixel is set up under Server settings.</p>
+          <p className="muted" style={{ margin: 0, fontSize: 14 }}>Shown at the bottom of the store when the Meta or TikTok Pixel is set up under Server settings.</p>
           {([
             ['notice', 'Track unless the visitor says no', 'Common for South African stores. Visitors see the notice and can decline.'],
             ['optin', 'Only track after the visitor says OK', 'Stricter (EU-style). Fewer visitors are tracked, so ads get less data.'],

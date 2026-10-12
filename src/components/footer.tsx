@@ -15,7 +15,7 @@ export async function Footer() {
   };
   return (
     <>
-    <MetaPixel pixelId={env.metaPixelId()} mode={s.trackingConsent === 'optin' ? 'optin' : 'notice'} sandbox={(() => { try { return env.payfastSandbox(); } catch { return true; } })()} />
+    <MetaPixel pixelId={env.metaPixelId()} tiktokId={env.tiktokPixelId()} mode={s.trackingConsent === 'optin' ? 'optin' : 'notice'} sandbox={(() => { try { return env.payfastSandbox(); } catch { return true; } })()} />
     <footer>
       <div className="wrap foot">
         <div className="foot-brand">

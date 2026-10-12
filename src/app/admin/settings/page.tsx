@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import type { SiteSettings, Bundle } from '@/lib/settings';
 import { AdminShell, api } from '../ui';
 
-type Status = { siteUrl: string; meta?: { pixelId: string; token: boolean; testCode: string }; payfastSandbox: boolean; payfast?: { merchantId: string; keyHint: string; passphraseLength: number; hadSpaces: string[]; publicSandbox: boolean }; bobgoSandbox: boolean; bobgoKey: boolean; bobgoWebhookSecret: boolean; deliveryAvg?: number };
+type Status = { siteUrl: string; meta?: { pixelId: string; token: boolean; testCode: string }; tiktok?: { pixelId: string; token: boolean; testCode: string }; payfastSandbox: boolean; payfast?: { merchantId: string; keyHint: string; passphraseLength: number; hadSpaces: string[]; publicSandbox: boolean }; bobgoSandbox: boolean; bobgoKey: boolean; bobgoWebhookSecret: boolean; deliveryAvg?: number };
 const PROVINCES = ['Eastern Cape', 'Free State', 'Gauteng', 'KwaZulu-Natal', 'Limpopo', 'Mpumalanga', 'North West', 'Northern Cape', 'Western Cape'];
 
 const TEXT: [keyof SiteSettings, string, boolean?][] = [
@@ -12,14 +12,14 @@ const TEXT: [keyof SiteSettings, string, boolean?][] = [
   ['photoHeading', 'Photo review cards heading'], ['stripLabel', 'Photo strip badge'], ['reviewsHeading', 'Review list heading'], ['shipping', 'Shipping & returns text', true],
 ];
 
-function MetaTest() {
+function MetaTest({ to = 'meta' }: { to?: 'meta' | 'tiktok' }) {
   const [busy, setBusy] = useState(false);
   const [res, setRes] = useState<{ ok: boolean; result: string; hint?: string } | null>(null);
   return (
     <div style={{ paddingLeft: 18, marginTop: 6, display: 'flex', flexDirection: 'column', gap: 6 }}>
       <button type="button" className="ghost" style={{ alignSelf: 'flex-start', color: 'var(--ink)' }} disabled={busy}
-        onClick={async () => { setBusy(true); try { setRes(await api('/api/admin/meta-test', { method: 'POST' })); } catch (e) { setRes({ ok: false, result: (e as Error).message }); } setBusy(false); }}>
-        {busy ? 'Sending…' : 'Send test event to Meta'}
+        onClick={async () => { setBusy(true); try { setRes(await api(`/api/admin/${to}-test`, { method: 'POST' })); } catch (e) { setRes({ ok: false, result: (e as Error).message }); } setBusy(false); }}>
+        {busy ? 'Sending…' : `Send test event to ${to === 'tiktok' ? 'TikTok' : 'Meta'}`}
       </button>
       {res && <div style={{ fontSize: 14 }}><Dot ok={res.ok} />{res.result}{res.hint && <div className="muted">{res.hint}</div>}</div>}
     </div>
@@ -103,6 +103,13 @@ export default function Settings() {
               <Dot ok={!!(st.meta.pixelId && st.meta.token)} />Meta tracking: {st.meta.pixelId ? <>Pixel <b>{st.meta.pixelId}</b> in the browser</> : 'Pixel ID not set'}{st.meta.token ? ' + Conversions API from the server' : st.meta.pixelId ? ', Conversions API token not set' : ''}{st.meta.testCode && <> · test code <b>{st.meta.testCode}</b> (remove when done testing)</>}
               {st.meta.pixelId && st.meta.token && <MetaTest />}
               {(!st.meta.pixelId || !st.meta.token) && <div className="muted" style={{ fontSize: 14, paddingLeft: 18 }}>Add them under <a href="/admin/server">Server settings</a>.</div>}
+            </div>
+          )}
+          {st.tiktok && (
+            <div>
+              <Dot ok={!!(st.tiktok.pixelId && st.tiktok.token)} />TikTok tracking: {st.tiktok.pixelId ? <>Pixel <b>{st.tiktok.pixelId}</b> in the browser</> : 'Pixel ID not set'}{st.tiktok.token ? ' + Events API from the server' : st.tiktok.pixelId ? ', Events API access token not set' : ''}{st.tiktok.testCode && <> · test code <b>{st.tiktok.testCode}</b> (remove when done testing)</>}
+              {st.tiktok.pixelId && st.tiktok.token && <MetaTest to="tiktok" />}
+              {(!st.tiktok.pixelId || !st.tiktok.token) && <div className="muted" style={{ fontSize: 14, paddingLeft: 18 }}>Add them under <a href="/admin/server">Server settings</a>.</div>}
             </div>
           )}
           <div><Dot ok={st.bobgoWebhookSecret} />Bob Go tracking updates {st.bobgoWebhookSecret ? 'verified with your webhook secret' : 'not set up yet'}</div>

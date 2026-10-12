@@ -2,7 +2,8 @@
 import { useEffect, useState } from 'react';
 import { newEventId, track } from '@/lib/track';
 
-type W = Window & { fbq?: ((...a: unknown[]) => void) & { callMethod?: unknown; queue?: unknown[]; loaded?: boolean; version?: string; push?: unknown }; _fbq?: unknown; __nuveTrack?: { on: boolean; sandbox: boolean } };
+type TTQ = unknown[] & Record<string, unknown>;
+type W = Window & { ttq?: TTQ; TiktokAnalyticsObject?: string; fbq?: ((...a: unknown[]) => void) & { callMethod?: unknown; queue?: unknown[]; loaded?: boolean; version?: string; push?: unknown }; _fbq?: unknown; __nuveTrack?: { on: boolean; sandbox: boolean } };
 
 const getConsent = () => {
   const m = /(?:^|;\s*)nuve_consent=(yes|no)/.exec(document.cookie);
@@ -33,44 +34,81 @@ function loadPixel(pixelId: string) {
   setTimeout(go, 3500);
 }
 
+// TikTok's standard base code (the snippet from TikTok Events Manager), split so the queue exists straight away
+// and events.js is only fetched on first scroll/tap or after a few seconds, like the Meta script above.
+const TT_METHODS = ['page', 'track', 'identify', 'instances', 'debug', 'on', 'off', 'once', 'ready', 'alias', 'group', 'enableCookie', 'disableCookie', 'holdConsent', 'revokeConsent', 'grantConsent'];
+function loadTikTok(pixelId: string) {
+  const w = window as W;
+  if (w.ttq) return;
+  w.TiktokAnalyticsObject = 'ttq';
+  const ttq = [] as unknown as TTQ;
+  w.ttq = ttq;
+  ttq.methods = TT_METHODS;
+  const setAndDefer = (t: TTQ, e: string) => { t[e] = (...a: unknown[]) => { t.push([e, ...a]); }; };
+  TT_METHODS.forEach((m) => setAndDefer(ttq, m));
+  ttq.instance = (id: string) => { const e = ((ttq._i as Record<string, TTQ>)[id] || []) as TTQ; TT_METHODS.forEach((m) => setAndDefer(e, m)); return e; };
+  const src = 'https://analytics.tiktok.com/i18n/pixel/events.js';
+  const i = (ttq._i = {} as Record<string, unknown>) as Record<string, TTQ>;
+  i[pixelId] = [] as unknown as TTQ; i[pixelId]._u = src;
+  ttq._t = { [pixelId]: +new Date() };
+  ttq._o = { [pixelId]: {} };
+  let done = false;
+  const go = () => {
+    if (done) return; done = true;
+    ['scroll', 'pointerdown', 'keydown', 'touchstart'].forEach((ev) => window.removeEventListener(ev, go));
+    const s = document.createElement('script'); s.async = true; s.src = `${src}?sdkid=${pixelId}&lib=ttq`;
+    document.head.appendChild(s);
+  };
+  ['scroll', 'pointerdown', 'keydown', 'touchstart'].forEach((ev) => window.addEventListener(ev, go, { once: true, passive: true }));
+  setTimeout(go, 3500);
+}
+
 // If the visitor arrived from a Meta ad (?fbclid=...), keep the click id even if the Pixel script is blocked.
 function keepClickId() {
   const id = new URLSearchParams(location.search).get('fbclid');
   if (id && !/(?:^|;\s*)_fbc=/.test(document.cookie)) {
     document.cookie = `_fbc=fb.1.${Date.now()}.${id}; path=/; max-age=${90 * 86400}; samesite=lax${location.protocol === 'https:' ? '; secure' : ''}`;
   }
+  // Same for TikTok ads (?ttclid=...): kept for the server's TikTok events, including the paid-order event.
+  const tt = new URLSearchParams(location.search).get('ttclid');
+  if (tt && /^[\w.-]{4,500}$/.test(tt)) {
+    document.cookie = `nuve_ttclid=${tt}; path=/; max-age=${30 * 86400}; samesite=lax${location.protocol === 'https:' ? '; secure' : ''}`;
+  }
+}
+
+function start(pixelId: string, tiktokId: string) {
+  keepClickId();
+  if (pixelId) loadPixel(pixelId);
+  if (tiktokId) loadTikTok(tiktokId);
+  track('PageView', {}, { eventId: newEventId('PageView') });
+  window.dispatchEvent(new Event('nuve-track-ready'));
 }
 
 /**
- * Meta Pixel + cookie notice. mode 'notice': tracks unless the visitor says no.
- * mode 'optin': tracks only after the visitor says yes. Renders nothing if no Pixel ID is set.
+ * Meta Pixel + TikTok Pixel + cookie notice. mode 'notice': tracks unless the visitor says no.
+ * mode 'optin': tracks only after the visitor says yes. Renders nothing if neither Pixel ID is set.
  */
-export default function MetaPixel({ pixelId, mode, sandbox }: { pixelId: string; mode: 'notice' | 'optin'; sandbox: boolean }) {
+export default function MetaPixel({ pixelId, tiktokId = '', mode, sandbox }: { pixelId: string; tiktokId?: string; mode: 'notice' | 'optin'; sandbox: boolean }) {
   const [ask, setAsk] = useState(false);
   useEffect(() => {
-    if (!pixelId) return;
+    if (!pixelId && !tiktokId) return;
     const w = window as W;
     const c = getConsent();
     const on = mode === 'optin' ? c === 'yes' : c !== 'no';
     w.__nuveTrack = { on, sandbox };
     if (c === null) setAsk(true);
     if (!on) return;
-    keepClickId();
-    loadPixel(pixelId);
-    track('PageView', {}, { eventId: newEventId('PageView') });
-    window.dispatchEvent(new Event('nuve-track-ready'));
-  }, [pixelId, mode, sandbox]);
+    start(pixelId, tiktokId);
+  }, [pixelId, tiktokId, mode, sandbox]);
 
-  if (!pixelId || !ask) return null;
+  if ((!pixelId && !tiktokId) || !ask) return null;
   const choose = (v: 'yes' | 'no') => {
     setConsent(v); setAsk(false);
     const w = window as W;
     if (v === 'no') { if (w.__nuveTrack) w.__nuveTrack.on = false; return; }
     if (!w.__nuveTrack?.on) {
       w.__nuveTrack = { on: true, sandbox };
-      keepClickId(); loadPixel(pixelId);
-      track('PageView', {}, { eventId: newEventId('PageView') });
-      window.dispatchEvent(new Event('nuve-track-ready'));
+      start(pixelId, tiktokId);
     }
   };
   return (

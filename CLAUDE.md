@@ -38,6 +38,8 @@ Live SnapBun store (Next.js 14 App Router + MySQL 8 + PayFast + Bob Go) running 
 
 - Meta tracking: browser Pixel (`src/components/meta-pixel.tsx`, `src/lib/track.ts`, loaded from the footer) plus Conversions API from the server (`src/lib/meta.ts`, `/api/meta/event`). Browser and server copies share an event_id. Purchase is sent by the server when an order is marked paid (`markPaid` → `sendPurchase`, retried by the cron), using browser details saved at checkout in `order_tracking`. Skipped in PayFast sandbox unless `META_TEST_EVENT_CODE` is set. Visitors who decline the cookie notice (`nuve_consent=no`) are not tracked.
 
+- TikTok tracking works the same way: browser TikTok Pixel (loaded by `meta-pixel.tsx` under the same cookie notice and delay; `track()` maps events, Purchase → CompletePayment) plus the Events API from the server (`src/lib/tiktok.ts`, relayed through `/api/meta/event`; PageView is browser-only). Keys `TIKTOK_PIXEL_ID`, `TIKTOK_ACCESS_TOKEN`, optional `TIKTOK_TEST_EVENT_CODE` in Server settings. `?ttclid=` is kept in cookie `nuve_ttclid`; at checkout ttclid and `_ttp` go into `tiktok_tracking`, and `markPaid` → `sendTikTokPurchase` sends CompletePayment once (event_id `purchase-<order id>`, retried by the cron, skipped in PayFast sandbox unless a TikTok test code is set).
+
 ## Rules
 - Keep PayFast signature code unchanged unless `npm test` still passes against `tests/vectors.jsonl`.
 - Status updates in orders.ts are conditional on purpose, to stop double payments and double Bob Go sends. Keep them atomic.

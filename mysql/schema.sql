@@ -165,6 +165,18 @@ CREATE TABLE IF NOT EXISTS order_tracking (
   CONSTRAINT order_tracking_order_fk FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+-- TikTok click details saved at checkout, for the TikTok CompletePayment event sent when the order is paid
+-- (src/lib/tiktok.ts). IP, browser and consent come from order_tracking.
+CREATE TABLE IF NOT EXISTS tiktok_tracking (
+  order_id CHAR(36) NOT NULL PRIMARY KEY,
+  ttclid VARCHAR(500) NULL,
+  ttp VARCHAR(200) NULL,
+  purchase_sent_at DATETIME(3) NULL,
+  purchase_result VARCHAR(300) NULL,
+  created_at DATETIME(3) NOT NULL DEFAULT (UTC_TIMESTAMP(3)),
+  CONSTRAINT tiktok_tracking_order_fk FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 -- Replies from the shop to contact messages, shown to the customer in their order app
 CREATE TABLE IF NOT EXISTS message_replies (
   id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,

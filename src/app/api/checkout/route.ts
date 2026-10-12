@@ -8,6 +8,7 @@ import { buildPaymentForm } from '@/lib/payfast';
 import { expireStale, logEvent } from '@/lib/orders';
 import { round2 } from '@/lib/money';
 import { browserFrom, declined } from '@/lib/meta';
+import { ttBrowserFrom } from '@/lib/tiktok';
 import { orderEmails } from '@/lib/email';
 
 export async function POST(req: NextRequest) {
@@ -66,6 +67,9 @@ export async function POST(req: NextRequest) {
     order_id: order.id, fbp: br.fbp || null, fbc: br.fbc || null, client_ip: br.ip || null, user_agent: (br.ua || '').slice(0, 500) || null,
     source_url: String(body.pageUrl || '').slice(0, 500) || null, consent: declined(req) ? 'no' : 'yes',
   }).catch((e) => console.warn('order_tracking insert failed', e));
+  const tt = ttBrowserFrom(req, String(body.pageUrl || '').slice(0, 500)); // TikTok click details, for its CompletePayment event
+  await insert('tiktok_tracking', { order_id: order.id, ttclid: tt.ttclid || null, ttp: tt.ttp || null })
+    .catch((e) => console.warn('tiktok_tracking insert failed', e));
   await logEvent(order.id, 'created', `Order placed (${method === 'eft' ? 'bank transfer' : 'PayFast'}), total R${total.toFixed(2)}`);
   if (rate.full_price !== undefined && rate.full_price > shipping) await logEvent(order.id, 'delivery', `Free delivery: the courier quote was about R${Math.round(rate.full_price)}, customer paid R${shipping.toFixed(0)}`);
 

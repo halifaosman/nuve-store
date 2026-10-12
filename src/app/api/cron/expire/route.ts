@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { env } from '@/lib/env';
-import { expireStale, retryBobGo, retryMetaPurchases } from '@/lib/orders';
+import { expireStale, retryBobGo, retryMetaPurchases, retryTikTokPurchases } from '@/lib/orders';
 import { compressNextVideo } from '@/lib/video';
 import { runFbAuto } from '@/lib/fbauto';
 import { runEmailOutbox } from '@/lib/email';
@@ -11,6 +11,7 @@ export async function GET(req: NextRequest) {
   await expireStale();
   await retryBobGo(20);
   await retryMetaPurchases(10);
+  await retryTikTokPurchases(10);
   void compressNextVideo(); // runs in the background; one video at a time
   void runEmailOutbox();    // order emails a hook missed, and retries
   void runFbAuto();         // Facebook comment auto-replies (does nothing until switched on)
