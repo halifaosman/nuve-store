@@ -33,6 +33,7 @@ export default async function OrderPage({ params, searchParams }: { params: { id
           total={Number(o.total)}
           qty={items.reduce((n, i) => n + Number(i.qty || 0), 0)}
           orderNumber={o.order_number}
+          buyer={{ email: o.email, phone: o.phone }}
           fromPayfast={searchParams.from === 'payfast'}
           bank={{ name: s.bankName, holder: s.bankAccountName, number: s.bankAccountNumber, branch: s.bankBranchCode, type: s.bankAccountType }}
           popEmail={s.popEmail}
